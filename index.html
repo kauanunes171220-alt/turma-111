@@ -1,0 +1,626 @@
+<!DOCTYPE html>
+<html lang="pt-BR" data-theme="dark">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Trabalhos Da 111 | Pro</title>
+    <style>
+/* ====================================================
+   LICENÇA DE USO EXCLUSIVA - DESENVOLVIDO PELA 111 =======================================================
+ * [AVISO]: A edição de qualquer linha lógica deste código, fora das áreas explicitamente liberadas, será rastreada e considerada PLÁGIO intelectual. 
+ 
+ * Se você não é da 111, sua única função aqui é observar e tentar aprender. Mexer sem autorização é admitir que sua turma não tem capacidade de criar algo próprio.
+ 
+ * 111: Onde o talento sobra e a concorrência chora.
+ 
+==================================================== */
+        /* Variáveis de Cores Otimizadas */
+        :root {
+            --primary-color: #3b82f6;
+            --primary-hover: #2563eb;
+            --bg-color: #f3f4f6;
+            --card-bg: #ffffff;
+            --text-main: #1f2937;
+            --text-muted: #6b7280;
+            --border-color: #e5e7eb;
+            --border-radius: 16px;
+            
+            /* Cores de Status */
+            --status-urgent-bg: #fee2e2;
+            --status-urgent-text: #dc2626;
+            --status-ok-bg: #d1fae5;
+            --status-ok-text: #059669;
+            --status-unknown-bg: #f3f4f6;
+            --status-unknown-text: #6b7280;
+        }
+
+        [data-theme="dark"] {
+            --primary-color: #60a5fa;
+            --primary-hover: #93c5fd;
+            --bg-color: #0f172a;
+            --card-bg: #1e293b;
+            --text-main: #f8fafc;
+            --text-muted: #94a3b8;
+            --border-color: #334155;
+            
+            --status-urgent-bg: #7f1d1d;
+            --status-urgent-text: #fca5a5;
+            --status-ok-bg: #064e3b;
+            --status-ok-text: #6ee7b7;
+            --status-unknown-bg: #334155;
+            --status-unknown-text: #cbd5e1;
+        }
+
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+            font-family: 'Segoe UI', system-ui, -apple-system, sans-serif;
+        }
+
+        body {
+            background-color: var(--bg-color);
+            color: var(--text-main);
+            padding: 20px;
+            transition: background-color 0.3s ease, color 0.3s ease;
+        }
+
+        header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 24px;
+            padding: 24px;
+            background-color: var(--card-bg);
+            border: 1px solid var(--border-color);
+            border-radius: var(--border-radius);
+            box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
+            transition: all 0.3s ease;
+        }
+
+        .header-titles h1 {
+            color: var(--primary-color);
+            font-size: 1.75rem;
+            font-weight: 700;
+            letter-spacing: -0.025em;
+        }
+
+        .header-titles p {
+            color: var(--text-muted);
+            font-size: 0.95rem;
+            margin-top: 4px;
+        }
+
+        #theme-toggle {
+            background: var(--bg-color);
+            border: 1px solid var(--border-color);
+            color: var(--text-main);
+            padding: 10px 20px;
+            border-radius: 9999px;
+            cursor: pointer;
+            font-weight: 600;
+            transition: all 0.2s ease;
+            box-shadow: 0 1px 2px rgba(0,0,0,0.05);
+        }
+
+        #theme-toggle:hover {
+            border-color: var(--primary-color);
+            color: var(--primary-color);
+        }
+
+        .container {
+            display: flex;
+            flex-direction: column;
+            gap: 24px;
+            max-width: 1000px;
+            margin: 0 auto;
+        }
+
+        /* Menu Horizontal */
+        .subjects-container {
+            background-color: var(--card-bg);
+            padding: 16px;
+            border-radius: var(--border-radius);
+            border: 1px solid var(--border-color);
+            box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.05);
+        }
+
+        .subjects-menu {
+            display: flex;
+            gap: 12px;
+            overflow-x: auto;
+            cursor: grab;
+            padding-bottom: 8px;
+            scrollbar-width: none;
+        }
+        
+        .subjects-menu::-webkit-scrollbar { display: none; }
+        .subjects-menu:active { cursor: grabbing; }
+
+        .subject-btn {
+            background-color: var(--bg-color);
+            border: 1px solid var(--border-color);
+            padding: 10px 24px;
+            border-radius: 9999px; /* Formato de pílula */
+            cursor: pointer;
+            font-weight: 600;
+            font-size: 0.95rem;
+            color: var(--text-main);
+            white-space: nowrap;
+            transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+        }
+
+        .subject-btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
+        }
+
+        .subject-btn.active {
+            background-color: var(--primary-color);
+            color: white;
+            border-color: var(--primary-color);
+            box-shadow: 0 4px 12px rgba(59, 130, 246, 0.3);
+        }
+
+        /* Área de Trabalhos */
+        .assignments-area {
+            background-color: var(--card-bg);
+            padding: 24px;
+            border-radius: var(--border-radius);
+            border: 1px solid var(--border-color);
+            min-height: 450px;
+            box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.05);
+        }
+
+        .assignments-header {
+            border-bottom: 2px solid var(--bg-color);
+            padding-bottom: 16px;
+            margin-bottom: 24px;
+            color: var(--primary-color);
+            font-size: 1.5rem;
+        }
+
+        /* Card Profissional */
+        .assignment-card {
+            background-color: var(--bg-color);
+            border-left: 5px solid var(--primary-color);
+            padding: 24px;
+            border-radius: 12px;
+            margin-bottom: 20px;
+            box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+            transition: transform 0.2s, box-shadow 0.2s;
+            position: relative;
+        }
+
+        .assignment-card:hover {
+            transform: translateY(-3px);
+            box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1);
+        }
+
+        .card-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: flex-start;
+            margin-bottom: 16px;
+        }
+
+        .tag-tipo {
+            background-color: var(--primary-color);
+            color: white;
+            padding: 4px 12px;
+            border-radius: 6px;
+            font-size: 0.85rem;
+            font-weight: 700;
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+        }
+
+        /* Badges de Status da Data */
+        .status-badge {
+            padding: 4px 12px;
+            border-radius: 9999px;
+            font-size: 0.85rem;
+            font-weight: 600;
+            display: flex;
+            align-items: center;
+            gap: 6px;
+        }
+
+        .status-urgent { background-color: var(--status-urgent-bg); color: var(--status-urgent-text); }
+        .status-ok { background-color: var(--status-ok-bg); color: var(--status-ok-text); }
+        .status-unknown { background-color: var(--status-unknown-bg); color: var(--status-unknown-text); }
+
+        .info-linha {
+            margin-bottom: 8px;
+            font-size: 0.95rem;
+        }
+
+        .info-linha strong { color: var(--text-muted); }
+        .info-linha span { color: var(--text-main); font-weight: 500; }
+
+        .sobre-container {
+            margin-top: 20px;
+            padding-top: 20px;
+            border-top: 1px dashed var(--border-color);
+        }
+
+        .sobre-texto {
+            color: var(--text-main);
+            line-height: 1.6;
+        }
+
+        .assignment-image {
+            max-width: 100%;
+            height: auto;
+            border-radius: 8px;
+            margin-top: 16px;
+            border: 1px solid var(--border-color);
+            display: block;
+            box-shadow: 0 4px 6px -1px rgba(0,0,0,0.1);
+            transition: transform 0.3s ease;
+        }
+
+        .assignment-image:hover {
+            transform: scale(1.02);
+        }
+
+        .topicos-lista {
+            list-style-position: inside;
+            padding-left: 8px;
+            margin-top: 12px;
+            color: var(--text-main);
+        }
+
+        .topicos-lista li {
+            margin-bottom: 6px;
+            padding-left: 8px;
+            border-left: 2px solid var(--primary-color);
+            list-style-type: none;
+        }
+
+        .empty-state {
+            text-align: center;
+            color: var(--text-muted);
+            margin-top: 60px;
+            font-size: 1.1rem;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 10px;
+        }
+        .footer-claim {
+           text-align: center;
+           font-size: 0.7rem;
+           opacity: 0.4;
+           margin-top: 30px;
+           padding: 15px;
+           border-top: 1px dashed var(--border-color);
+           letter-spacing: 1px;
+           color: var(--text-muted);
+        }
+        
+        .empty-state span { font-size: 3rem; }
+    </style>
+</head>
+<body>
+
+    <div class="container">
+        <header>
+            <div class="header-titles">
+                <h1>👑 Trabalhos Da 111 👑</h1>
+                <p>Painel de Controle da Turma</p>
+            </div>
+            <button id="theme-toggle">☀️ Light Mode</button>
+        </header>
+
+        <div class="subjects-container">
+            <div class="subjects-menu" id="subjects-menu"></div>
+        </div>
+
+        <div class="assignments-area">
+            <h2 class="assignments-header" id="current-subject">Visão Geral</h2>
+            <div id="assignments-list">
+                <div class="empty-state">
+                    <span>👆</span>
+                    Selecione uma matéria acima para começar.
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        const themeToggle = document.getElementById('theme-toggle');
+        const htmlElement = document.documentElement;
+
+        themeToggle.addEventListener('click', () => {
+            const current = htmlElement.getAttribute('data-theme');
+            const target = current === 'dark' ? 'light' : 'dark';
+            htmlElement.setAttribute('data-theme', target);
+            themeToggle.textContent = target === 'dark' ? '☀️ Light Mode' : '🌙 Dark Mode';
+        });
+        const slider = document.getElementById('subjects-menu');
+        let isDown = false, startX, scrollLeft;
+
+        slider.addEventListener('mousedown', (e) => { isDown = true; startX = e.pageX - slider.offsetLeft; scrollLeft = slider.scrollLeft; });
+        slider.addEventListener('mouseleave', () => isDown = false);
+        slider.addEventListener('mouseup', () => isDown = false);
+        slider.addEventListener('mousemove', (e) => {
+            if (!isDown) return;
+            e.preventDefault();
+            const x = e.pageX - slider.offsetLeft;
+            const walk = (x - startX) * 2;
+            slider.scrollLeft = scrollLeft - walk;
+        });
+        const database = {
+
+
+
+
+
+
+
+
+
+
+/*================================================
+              Mecha nessa parte abaixo
+*//*==============================================
+opcoes:
+{
+tipo: "titulo",
+dataEntrega: "data para entregar",
+sobre: "descrição do trabalho",
+topicos: [ " ", " " ],
+image: [ "link da imagem", "se precisar por outras imagens" ]
+}
+
+titulos:
+Pesquisa
+Desenho
+Escrita
+Prova
+apresentação
+
+*//*================================================*/
+"Artes integradas": [],
+/*================================================*/
+"Biologia": [
+{
+tipo: "Escrita",
+dataEntrega: "06/04",
+sobre: "Copiar a pagina 52 e 53",
+image: [ "https://i.ibb.co/d4nPjcz9/1000108960.jpg", "https://i.ibb.co/d81Hssm/1000108956.jpg" ]
+},
+{
+tipo: "Desenho",
+dataEntrega: "14/04",
+sobre: "Desenhar célula animal e vegetal, cada uma com suas organelas com a diferença entre elas"
+}
+],
+/*================================================*/
+"Educação financeira": [],
+/*================================================*/
+"Educação física": [],
+/*================================================*/
+"Escrita Criativa": [
+{
+tipo: "Apresentação",
+dataEntrega: "17/04",
+sobre: "criar um pod-cast"
+}
+],
+/*================================================*/
+"Espanhol": [
+{
+tipo: "Copiar",
+dataEntrega: "?",
+sobre: "copiar pagina 12 e 14",
+topicos: [ " ", " " ],
+image: [ "link da imagem", "se precisar por outras imagens" ]
+},
+{
+tipo: "Desenho",
+dataEntrega: "?",
+sobre: "Desenhar o mapa pré definido pela professora",
+topicos: [ " ", " " ],
+image: [ "link da imagem", "se precisar por outras imagens" ]
+}
+],
+/*================================================*/
+"Filosofia": [],
+/*================================================*/
+"Física": [],
+/*================================================*/
+"Geografia": [],
+/*================================================*/
+"História": [
+{
+tipo: "Pesquisa",
+dataEntrega: "?",
+sobre: "pesquisar sobre os calendários de cada país"
+}
+],
+/*================================================*/
+"Inglês": [],
+/*================================================*/
+"Intr.tec.e.mundo trab": [
+{
+tipo: "Apresentação",
+dataEntrega: "28/04",
+sobre: "??"
+},
+{
+tipo: "Pesquisa",
+dataEntrega: "9/04",
+sobre: "principais direitos e atividades do regime clt"
+}
+],
+/*================================================*/
+"Literatura": [
+{
+tipo: "Copiar",
+dataEntrega: "?",
+sobre: "copiar da pagina 46 a 48",
+image: [ "link da imagem", "se precisar por outras imagens", "" ]
+},
+{
+tipo: "Prova",
+dataEntrega: "17/04",
+sobre: "."
+},
+{
+tipo: "Responder",
+dataEntrega: "08/05",
+sobre: "questões sobre o quinhentismo"
+}
+],
+/*================================================*/
+"Matemática": [
+{
+tipo: "Pesquisa",
+dataEntrega: "19/04",
+sobre: "pesquisar e apresentar sobre o jogo da onça"
+}
+],
+/*================================================*/
+"Orient. Estud. E sociedade": [],
+/*================================================*/
+"Português": [
+{
+tipo: "Prova",
+sobre: "figuras de linguagem",
+dataEntrega: "09/04"
+}
+],
+/*================================================*/
+"Pre-itinerário aprof": [
+{
+tipo: "Pesquisa",
+dataEntrega: "?",
+sobre: "Pesquisar sobre as questões, diga algo que chamou a sua atenção no trabalho.",
+topicos: [ "Escrito a mão", "Fontes de pesquisa" ],
+image: [ "https://i.ibb.co/tMGPnFLy/1000112777.jpg" ]
+}
+],
+/*================================================*/
+"Proj. Integ. E social (pics)": [
+{
+tipo: "Pesquisa",
+dataEntrega: "?",
+sobre: ""
+}
+],
+/*================================================*/
+"Projeto de vida": [],
+/*================================================*/
+"Química": [],
+/*================================================*/
+"Sociologia": []
+/*================================================*/
+
+
+
+
+
+
+
+
+
+
+};
+        function analisarData(dataStr) {
+            if (!dataStr || dataStr.includes('?')) {
+                return { classe: 'status-unknown', texto: '📅 Sem data', pura: 'Não definida' };
+            }
+            
+            const partes = dataStr.split('/');
+            if (partes.length !== 2) return { classe: 'status-unknown', texto: '📅 ' + dataStr, pura: dataStr };
+
+            const hoje = new Date();
+            // Assume o ano atual
+            const dataEntrega = new Date(hoje.getFullYear(), parseInt(partes[1]) - 1, parseInt(partes[0]));
+            
+            // Calcula a diferença em dias
+            const diferencaTempo = dataEntrega.getTime() - hoje.getTime();
+            const diferencaDias = Math.ceil(diferencaTempo / (1000 * 3600 * 24));
+
+            if (diferencaDias < 0) {
+                return { classe: 'status-urgent', texto: '⚠️ Atrasado', pura: dataStr };
+            } else if (diferencaDias <= 2) {
+                return { classe: 'status-urgent', texto: `🔥 Urgente (${diferencaDias} dias)`, pura: dataStr };
+            } else {
+                return { classe: 'status-ok', texto: '✅ No prazo', pura: dataStr };
+            }
+        }
+        const assignmentsList = document.getElementById('assignments-list');
+        const currentSubjectHeader = document.getElementById('current-subject');
+
+        Object.keys(database).forEach(subject => {
+            const btn = document.createElement('button');
+            btn.className = 'subject-btn';
+            btn.textContent = subject;
+            btn.onclick = () => loadAssignments(subject, btn);
+            slider.appendChild(btn);
+        });
+
+        function loadAssignments(subject, clickedBtn) {
+            document.querySelectorAll('.subject-btn').forEach(b => b.classList.remove('active'));
+            clickedBtn.classList.add('active');
+            currentSubjectHeader.textContent = subject;
+            assignmentsList.innerHTML = ''; 
+
+            const trabalhos = database[subject];
+            if (!trabalhos || trabalhos.length === 0) {
+                assignmentsList.innerHTML = `
+                    <div class="empty-state">
+                        <span>🎉</span>
+                        Nenhum trabalho pendente para esta matéria!
+                    </div>`;
+                return;
+            }
+
+            trabalhos.forEach(trab => {
+                const card = document.createElement('div');
+                card.className = 'assignment-card';
+                
+                const statusData = analisarData(trab.dataEntrega);
+
+                let topicosHtml = '';
+                if (trab.topicos && trab.topicos.length > 0) {
+                    const lis = trab.topicos.filter(t => t.trim() !== '').map(item => `<li>${item}</li>`).join('');
+                    if(lis) topicosHtml = `<ul class="topicos-lista">${lis}</ul>`;
+                }
+
+                let imagensHtml = '';
+                if (trab.image) {
+                    const imgs = Array.isArray(trab.image) ? trab.image : [trab.image];
+                    imagensHtml = imgs.filter(url => url.trim() !== '').map(url => 
+                        `<img src="${url}" alt="Anexo do Trabalho" class="assignment-image">`
+                    ).join('');
+                }
+
+                card.innerHTML = `
+                    <div class="card-header">
+                        <div class="tag-tipo">${trab.tipo || 'Trabalho'}</div>
+                        <div class="status-badge ${statusData.classe}">${statusData.texto}</div>
+                    </div>
+                    
+                    <div class="info-linha"><strong>Data limite:</strong> <span>${statusData.pura}</span></div>
+                    
+                    <div class="sobre-container">
+                        <div class="info-linha"><strong>Descrição:</strong></div>
+                        <div class="sobre-texto">${trab.sobre || '<em>Nenhuma instrução adicional fornecida.</em>'}</div>
+                        ${topicosHtml}
+                        ${imagensHtml}
+                    </div>
+                `;
+                assignmentsList.appendChild(card);
+            });
+        }
+    </script>
+<footer class="footer-claim">
+    © 2026 Desenvolvido pela <b>111</b>.
+</footer>
+</body>
+</html>
+
