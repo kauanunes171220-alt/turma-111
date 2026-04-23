@@ -1,0 +1,852 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>Apple Collect - Missões, Eventos Suaves e Compra Rápida</title>
+    <style>
+        :root {
+            --btn-opacity: 0.65;
+        }
+
+        body, html {
+            margin: 0; padding: 0; width: 100%; height: 100%; overflow: hidden;
+            background-color: #87CEEB; font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            touch-action: none;
+        }
+        #gameCanvas { display: block; }
+
+        /* --- HUD --- */
+        #hud {
+            position: absolute; top: 10px; left: 10px; right: 10px; display: flex;
+            justify-content: space-between; align-items: center; font-size: 18px;
+            font-weight: bold; color: #2C3E50; z-index: 5; pointer-events: none;
+        }
+        #hudLeft { pointer-events: auto; }
+        #hudRight { pointer-events: auto; display: flex; gap: 8px; }
+        #hud span {
+            background-color: rgba(255, 255, 255, 0.8); padding: 5px 10px;
+            border-radius: 10px; margin-right: 5px; display: inline-block;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+        }
+
+        .hud-btn {
+            background-color: rgba(255, 255, 255, 0.9); border: 2px solid #bdc3c7;
+            border-radius: 10px; padding: 5px 10px; font-size: 16px; cursor: pointer;
+            font-weight: bold; box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+        }
+
+        /* --- Banner de Anúncio de Eventos --- */
+        #eventBanner {
+            position: absolute; top: 35%; left: 50%; transform: translate(-50%, -50%) scale(0.8);
+            font-size: 42px; font-weight: bold; color: white; text-align: center;
+            text-shadow: 0 4px 15px rgba(0,0,0,0.8), 0 0 20px currentColor;
+            pointer-events: none; z-index: 15; opacity: 0; 
+            transition: opacity 0.5s ease, transform 0.5s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+        }
+
+        /* --- Botões de Habilidades (In-Game) --- */
+        #abilitiesContainer {
+            position: absolute; bottom: 30px; right: 20px; display: flex;
+            flex-direction: column; gap: 15px; z-index: 4; pointer-events: auto;
+        }
+        .ability-btn {
+            color: white; border: 2px solid; border-radius: 50%;
+            width: 70px; height: 70px; font-size: 12px; font-weight: bold;
+            cursor: pointer; box-shadow: 0 4px 6px rgba(0,0,0,0.3); transition: transform 0.1s, opacity 0.2s;
+            display: flex; flex-direction: column; align-items: center; justify-content: center;
+            opacity: var(--btn-opacity);
+        }
+        .ability-btn:active { transform: scale(0.90); opacity: 1; }
+        .ability-btn:disabled { opacity: 0.3; cursor: not-allowed; }
+        .btn-slow { background-color: #9b59b6; border-color: #8e44ad; }
+        .btn-basket { background-color: #e67e22; border-color: #d35400; }
+
+        /* --- Overlay de Contagem Regressiva e Piscar --- */
+        #countdownOverlay {
+            position: absolute; top: 0; left: 0; width: 100%; height: 100%;
+            background: rgba(0,0,0,0.6); color: white; font-size: 120px;
+            font-weight: bold; display: none; justify-content: center;
+            align-items: center; z-index: 20; text-shadow: 2px 2px 10px rgba(0,0,0,0.5);
+        }
+        #vignetteOverlay {
+            position: absolute; top: 0; left: 0; width: 100%; height: 100%;
+            pointer-events: none; z-index: 2; opacity: 0;
+            box-shadow: inset 0 0 100px rgba(155, 89, 182, 0.8); transition: opacity 0.1s;
+        }
+
+        /* --- Interface do Menu / Loja --- */
+        #ui {
+            position: absolute; top: 0; left: 0; width: 100%; height: 100%;
+            display: flex; flex-direction: column; justify-content: center;
+            align-items: center; background-color: rgba(255, 255, 255, 0.95); z-index: 10;
+        }
+        h1 { color: #E74C3C; margin-bottom: 5px; font-size: 32px; text-align: center; }
+        p { color: #34495E; font-size: 16px; text-align: center; margin-bottom: 15px; padding: 0 20px; }
+        button.start-btn {
+            padding: 12px 30px; font-size: 18px; font-weight: bold; color: white;
+            background-color: #2ECC71; border: none; border-radius: 20px;
+            cursor: pointer; margin-bottom: 15px; box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+        }
+
+        /* Navegação do Menu (Abas) */
+        .shop-tabs { display: flex; gap: 5px; margin-bottom: 10px; width: 90%; max-width: 400px;}
+        .shop-tab-btn {
+            flex: 1; padding: 8px 4px; border: none; border-radius: 10px; background: #bdc3c7;
+            font-weight: bold; cursor: pointer; color: white; font-size: 13px;
+        }
+        .shop-tab-btn.active { background: #2980b9; }
+
+        #shop {
+            display: flex; flex-direction: column; gap: 10px; width: 90%;
+            max-width: 400px; background: #fdfdfd; padding: 15px; box-sizing: border-box;
+            border-radius: 15px; border: 2px solid #ddd; max-height: 45vh; overflow-y: auto;
+        }
+        .shop-section { display: none; flex-direction: column; gap: 10px; }
+        .shop-section.active { display: flex; }
+
+        .shop-item, .mission-item, .config-item {
+            display: flex; justify-content: space-between; align-items: center;
+            background: #ecf0f1; padding: 10px 12px; border-radius: 10px;
+        }
+        .config-item { flex-direction: column; align-items: flex-start; gap: 10px; width: 100%; box-sizing: border-box;}
+        
+        .shop-item button, .mission-item button, .config-btn {
+            margin: 0; padding: 6px 12px; font-size: 14px; font-weight: bold;
+            background-color: #f39c12; color: white; border: none; border-radius: 8px; cursor: pointer;
+        }
+        .shop-item button:disabled, .mission-item button:disabled { background-color: #95a5a6; cursor: not-allowed; }
+        .equip-btn, .claim-btn { background-color: #27ae60 !important; }
+        .reset-btn { background-color: #c0392b !important; width: 100%; padding: 10px; }
+        
+        .item-info { display: flex; flex-direction: column; width: 65%; }
+        .item-name { font-size: 14px; font-weight: bold; color: #2c3e50; line-height: 1.2;}
+        .item-desc { font-size: 12px; color: #7f8c8d; margin-top: 3px; }
+        .item-cost { font-size: 13px; color: #e67e22; font-weight: bold; }
+        
+        /* Barra de Progresso das Missões */
+        .progress-bar-bg { width: 100%; background-color: #bdc3c7; border-radius: 5px; height: 8px; margin-top: 5px; overflow: hidden;}
+        .progress-bar-fill { height: 100%; background-color: #2ecc71; width: 0%; transition: width 0.3s; }
+
+        /* Estilização de Config */
+        .checkbox-label { display: flex; align-items: center; gap: 10px; font-size: 14px; font-weight: bold; color: #2c3e50; cursor: pointer;}
+        .checkbox-label input[type="checkbox"] { width: 18px; height: 18px; cursor: pointer; }
+        .opacity-slider-container { display: flex; align-items: center; gap: 10px; width: 100%; }
+        .opacity-slider-container input { flex: 1; }
+
+        #statsDisplay { margin-bottom: 15px; font-size: 18px; font-weight: bold; color: #8e44ad; text-align: center; }
+        #musicWarning { font-size: 12px; color: #7f8c8d; margin-top: 10px; text-align: center; }
+    </style>
+</head>
+<body>
+
+    <div id="vignetteOverlay"></div>
+    <div id="eventBanner"></div>
+
+    <div id="hud">
+        <div id="hudLeft">
+            <span id="scoreDisplay">Pontos: 0</span>
+            <span id="coinsDisplay">🪙 0</span>
+        </div>
+        <div id="hudRight">
+            <button id="btnPause" class="hud-btn" onclick="togglePause()">⏸️ Menu</button>
+            <button id="btnMute" class="hud-btn" onclick="toggleMute()">🎵</button>
+        </div>
+    </div>
+
+    <div id="abilitiesContainer">
+        <button id="btnUseSlowMo" class="ability-btn btn-slow" onclick="handleQuickAbility('slowmo')">
+            <span>⏱️ Slow</span><span id="txtBtnSlow">...</span>
+        </button>
+        <button id="btnUseBasket" class="ability-btn btn-basket" onclick="handleQuickAbility('basket')">
+            <span>🧺 Cesta</span><span id="txtBtnBasket">...</span>
+        </button>
+    </div>
+
+    <div id="countdownOverlay">3</div>
+
+    <div id="ui">
+        <h1 id="uiTitle">Colheita de Maçãs</h1>
+        <p id="uiDesc">Arraste a cesta para pegar as maçãs!</p>
+        <div id="statsDisplay">Recorde: 0<br>Moedas: 0</div>
+        <button id="startBtn" class="start-btn">Jogar</button>
+
+        <div class="shop-tabs">
+            <button class="shop-tab-btn active" onclick="switchShopTab('powers')">Poderes</button>
+            <button class="shop-tab-btn" onclick="switchShopTab('skins')">Skins</button>
+            <button class="shop-tab-btn" onclick="switchShopTab('missions')">Missões</button>
+            <button class="shop-tab-btn" onclick="switchShopTab('config')">Config</button>
+        </div>
+
+        <div id="shop">
+            <div id="tab-powers" class="shop-section active">
+                <div class="shop-item">
+                    <div class="item-info">
+                        <span class="item-name">Cesta Maior (10s)</span>
+                        <span class="item-cost">🪙 100</span>
+                    </div>
+                    <button id="btnBuyBasketMenu" onclick="buyPowerUp('basket')">Comprar</button>
+                </div>
+                <div class="shop-item">
+                    <div class="item-info">
+                        <span class="item-name">Maçãs 2x (Run)</span>
+                        <span class="item-cost">🪙 250</span>
+                    </div>
+                    <button id="btnBuyDoubleMenu" onclick="buyPowerUp('double')">Comprar</button>
+                </div>
+                <div class="shop-item">
+                    <div class="item-info">
+                        <span class="item-name">Slow Motion (5s)</span>
+                        <span class="item-cost">🪙 75</span>
+                    </div>
+                    <button id="btnBuySlowMoMenu" onclick="buyPowerUp('slowmo')">Comprar</button>
+                </div>
+            </div>
+
+            <div id="tab-skins" class="shop-section"></div>
+            <div id="tab-missions" class="shop-section"></div>
+
+            <div id="tab-config" class="shop-section">
+                <div class="config-item">
+                    <label class="checkbox-label" id="lblEventsContainer">
+                        <input type="checkbox" id="chkEvents" onchange="toggleEvents()"> 
+                        <span id="lblEventsText">Ativar Eventos (Requer 200 pts)</span>
+                    </label>
+                    <span class="item-desc">Ative chuvas, ventanias e arco-íris de ouro para deixar o jogo mais dinâmico.</span>
+                </div>
+                <div class="config-item">
+                    <span class="item-name">Transparência dos Botões</span>
+                    <div class="opacity-slider-container">
+                        <input type="range" id="opacitySlider" min="20" max="100" value="65" oninput="updateBtnOpacity(this.value)">
+                        <span id="opacityValDisplay" class="item-desc" style="font-weight:bold; color:#2c3e50;">65%</span>
+                    </div>
+                </div>
+                <div class="config-item" style="align-items: center;">
+                    <button class="config-btn reset-btn" onclick="resetGameData()">Apagar Progresso (Reset)</button>
+                </div>
+            </div>
+        </div>
+        <p id="musicWarning">Clique em qualquer lugar para liberar o áudio.</p>
+    </div>
+
+    <canvas id="gameCanvas"></canvas>
+
+    <script>
+        // ==========================================
+        // CONFIGURAÇÕES GERAIS E SKINS
+        // ==========================================
+        const imagensCarregadas = { fundo: new Image(), cestaBase: new Image(), macaBase: new Image() };
+        imagensCarregadas.fundo.src = ''; 
+        imagensCarregadas.cestaBase.src = ''; 
+        imagensCarregadas.macaBase.src = '';
+
+        const SKINS_CONFIG = {
+            baskets: [
+                { id: 'b_default', name: 'Cesta Padrão', color: '#D35400', cost: 0 },
+                { id: 'b_azul', name: 'Cesta Azul', color: '#3498db', cost: 150 },
+                { id: 'b_preta', name: 'Cesta Obsidian', color: '#2c3e50', cost: 500 },
+                { id: 'b_dourada', name: 'Cesta de Ouro', color: '#FFD700', cost: 1000 }
+            ],
+            apples: [
+                { id: 'a_default', name: 'Maçã Clássica', color: '#E74C3C', cost: 0 },
+                { id: 'a_verde', name: 'Maçã Verde', color: '#2ecc71', cost: 150 },
+                { id: 'a_roxa', name: 'Uva', color: '#8e44ad', cost: 500 }
+            ]
+        };
+
+        const PRECOS = { basket: 100, double: 250, slowmo: 75 };
+
+        // Save Data Variables & Inicialização de Missões com os novos valores
+        let coins = parseInt(localStorage.getItem('appleCoins')) || 0;
+        let highScore = parseInt(localStorage.getItem('appleHighScore')) || 0;
+        let unlockedSkins = JSON.parse(localStorage.getItem('appleUnlockedSkins')) || { baskets: ['b_default'], apples: ['a_default'] };
+        let equippedSkins = JSON.parse(localStorage.getItem('appleEquippedSkins')) || { basket: 'b_default', apple: 'a_default' };
+        
+        let defaultMissions = { 
+            progressionTarget: 100, totalApplesCollected: 0, renewableTarget: 50,
+            rainApplesCollected: 0, rainTarget: 20,
+            rainbowCollected: 0, rainbowTarget: 1,
+            spaceCollected: 0, spaceTarget: 1
+        };
+        let savedMissions = JSON.parse(localStorage.getItem('appleMissions')) || {};
+        let missions = { ...defaultMissions, ...savedMissions }; // Mescla antigos com novos
+
+        let eventsEnabled = localStorage.getItem('appleEventsEnabled') === 'true';
+        let btnOpacityConfig = parseInt(localStorage.getItem('appleButtonOpacity')) || 65;
+        document.documentElement.style.setProperty('--btn-opacity', btnOpacityConfig / 100);
+
+        let inventory = { basket: false, double: false, slowmo: false };
+        let isPaused = false, isMuted = false;
+
+        // Áudios
+        const URL_LOBBY = '';
+        const URLS_INGAME = ['https://files.catbox.moe/z0xnd1.mp4', '', '', '', ''];
+        const somLobby = new Audio(URL_LOBBY); somLobby.loop = true; somLobby.volume = 0.5;
+        const audiosInGame = URLS_INGAME.map(url => { let a = new Audio(url); a.volume = 0.5; return a; });
+        const somColeta = new Audio('https://github.com/kauanunes171220-alt/apple-champions/raw/refs/heads/main/a4.mp3');
+        const somGameOver = new Audio('');
+
+        let trackInGameAtual = 0;
+        function tocarProximaTrackInGame() {
+            if (!gameRunning || isPaused) return; 
+            audiosInGame[trackInGameAtual].pause(); audiosInGame[trackInGameAtual].currentTime = 0;
+            trackInGameAtual = (trackInGameAtual + 1) % audiosInGame.length;
+            if(audiosInGame[trackInGameAtual].src) audiosInGame[trackInGameAtual].play().catch(() => {});
+        }
+        audiosInGame.forEach(audio => { audio.addEventListener('ended', tocarProximaTrackInGame); });
+
+        function iniciarMusicaLobby() { audiosInGame.forEach(a => { a.pause(); a.currentTime = 0; }); if (!isMuted) somLobby.play().catch(() => {}); }
+        function iniciarMusicaJogo() { somLobby.pause(); somLobby.currentTime = 0; if (!isMuted && audiosInGame[trackInGameAtual].src) audiosInGame[trackInGameAtual].play().catch(() => {}); }
+
+        document.body.addEventListener('click', () => { if (!gameRunning && somLobby.paused && !isMuted) { iniciarMusicaLobby(); document.getElementById('musicWarning').style.display = 'none'; } }, { once: true });
+        window.toggleMute = function() { isMuted = !isMuted; document.getElementById('btnMute').innerText = isMuted ? '🔇' : '🎵'; somLobby.muted = isMuted; audiosInGame.forEach(a => a.muted = isMuted); somColeta.muted = isMuted; somGameOver.muted = isMuted; };
+
+        // Variáveis do Jogo
+        const canvas = document.getElementById('gameCanvas'); const ctx = canvas.getContext('2d');
+        const ui = document.getElementById('ui'); const statsDisplay = document.getElementById('statsDisplay');
+        const vignetteOverlay = document.getElementById('vignetteOverlay');
+        const eventBanner = document.getElementById('eventBanner');
+        canvas.width = window.innerWidth; canvas.height = window.innerHeight;
+
+        let score = 0, runApples = 0, gameRunning = false, animationId;
+        const basketBaseWidth = 90;
+        const basket = { width: basketBaseWidth, height: 30, x: canvas.width / 2 - 45, y: canvas.height - 60, color: '#D35400' };
+
+        let apples = [], floatingTexts = [], appleSpawnTimer = 0, appleSpawnRate = 60, appleSpeed = 3;
+        let activeDouble = false, timerBasket = 0, timerSlowMo = 0;
+        let basketBounce = 0, particles = [], caughtGroups = new Set();
+        let weatherParticles = [];
+
+        // Sistema de Eventos e Clima
+        let activeEvent = 'none'; 
+        let eventDuration = 0;
+        let eventCooldown = 600; 
+        let eventIntensity = 0; 
+        let lightningTimer = 0;
+        let lightningX = 0;
+
+        function saveData() { 
+            localStorage.setItem('appleCoins', coins); 
+            localStorage.setItem('appleHighScore', highScore); 
+            localStorage.setItem('appleUnlockedSkins', JSON.stringify(unlockedSkins));
+            localStorage.setItem('appleEquippedSkins', JSON.stringify(equippedSkins));
+            localStorage.setItem('appleMissions', JSON.stringify(missions));
+            localStorage.setItem('appleEventsEnabled', eventsEnabled);
+            localStorage.setItem('appleButtonOpacity', btnOpacityConfig);
+        }
+
+        window.resetGameData = function() {
+            if (confirm("⚠️ TEM CERTEZA? Isso apagará TODAS as suas moedas, recordes e skins desbloqueadas. Essa ação não pode ser desfeita.")) {
+                localStorage.clear();
+                location.reload();
+            }
+        };
+
+        window.toggleEvents = function() {
+            if (highScore >= 200) { eventsEnabled = document.getElementById('chkEvents').checked; saveData(); }
+        };
+
+        window.updateBtnOpacity = function(val) {
+            btnOpacityConfig = val;
+            document.documentElement.style.setProperty('--btn-opacity', val / 100);
+            document.getElementById('opacityValDisplay').innerText = val + '%';
+            saveData();
+        };
+
+        // --- SISTEMA DE UI E LOJA / MISSÕES ---
+        function switchShopTab(tab) {
+            document.querySelectorAll('.shop-tab-btn').forEach(btn => btn.classList.remove('active'));
+            document.querySelectorAll('.shop-section').forEach(sec => sec.classList.remove('active'));
+            event.target.classList.add('active');
+            document.getElementById('tab-' + tab).classList.add('active');
+            if (tab === 'skins') renderSkinsShop();
+            if (tab === 'missions') renderMissions();
+            if (tab === 'config') renderConfigUI();
+        }
+
+        function renderConfigUI() {
+            const chk = document.getElementById('chkEvents');
+            const lbl = document.getElementById('lblEventsText');
+            if (highScore >= 200) {
+                chk.disabled = false; chk.checked = eventsEnabled;
+                lbl.innerText = "Eventos Especiais Ativados"; lbl.style.color = "#27ae60";
+            } else {
+                chk.disabled = true; chk.checked = false;
+                lbl.innerText = "Ativar Eventos (Desbloqueia aos 200 pts)"; lbl.style.color = "#7f8c8d";
+            }
+            document.getElementById('opacitySlider').value = btnOpacityConfig;
+            document.getElementById('opacityValDisplay').innerText = btnOpacityConfig + '%';
+        }
+
+        function renderSkinsShop() {
+            const container = document.getElementById('tab-skins');
+            container.innerHTML = '<div style="text-align: center; font-weight: bold; font-size:14px; color:#2c3e50;">Cestas</div>';
+            SKINS_CONFIG.baskets.forEach(skin => container.innerHTML += createSkinHtml(skin, unlockedSkins.baskets.includes(skin.id), equippedSkins.basket === skin.id, 'basket'));
+            container.innerHTML += '<div style="text-align: center; font-weight: bold; font-size:14px; color:#2c3e50; margin-top:10px;">Maçãs</div>';
+            SKINS_CONFIG.apples.forEach(skin => container.innerHTML += createSkinHtml(skin, unlockedSkins.apples.includes(skin.id), equippedSkins.apple === skin.id, 'apple'));
+        }
+
+        function createSkinHtml(skin, isUnlocked, isEquipped, type) {
+            let btnHtml = isEquipped ? `<button disabled>Em Uso</button>` : (isUnlocked ? `<button class="equip-btn" onclick="equipSkin('${type}', '${skin.id}')">Equipar</button>` : `<button onclick="buySkin('${type}', '${skin.id}', ${skin.cost})">🪙 ${skin.cost}</button>`);
+            return `<div class="shop-item"><div class="item-info"><span class="item-name" style="color: ${skin.color}">${skin.name}</span></div>${btnHtml}</div>`;
+        }
+
+        window.buySkin = function(type, id, cost) { if (coins >= cost) { coins -= cost; if (type === 'basket') unlockedSkins.baskets.push(id); if (type === 'apple') unlockedSkins.apples.push(id); equipSkin(type, id); } }
+        window.equipSkin = function(type, id) { if (type === 'basket') equippedSkins.basket = id; if (type === 'apple') equippedSkins.apple = id; saveData(); updateUI(); renderSkinsShop(); }
+        function getActiveSkinColor(type) { return type === 'basket' ? (SKINS_CONFIG.baskets.find(s => s.id === equippedSkins.basket)?.color || '#D35400') : (SKINS_CONFIG.apples.find(s => s.id === equippedSkins.apple)?.color || '#E74C3C'); }
+
+        function renderMissions() {
+            const container = document.getElementById('tab-missions'); container.innerHTML = '';
+            
+            function createMissionItem(name, desc, current, target, reward, claimType) {
+                let completed = current >= target;
+                let pct = Math.min((current / target) * 100, 100);
+                return `<div class="mission-item"><div class="item-info"><span class="item-name">${name}</span><span class="item-desc">${desc}</span><div class="progress-bar-bg"><div class="progress-bar-fill" style="width: ${pct}%"></div></div><span class="item-desc">${current} / ${target}</span></div>${completed ? `<button class="claim-btn" onclick="claimMission('${claimType}', ${reward})">🪙 ${reward}</button>` : `<button disabled>🪙 ${reward}</button>`}</div>`;
+            }
+
+            container.innerHTML += createMissionItem("Avanço de Pontos", `Alcance ${missions.progressionTarget} pts`, highScore, missions.progressionTarget, missions.progressionTarget * 2, 'progression');
+            container.innerHTML += createMissionItem("Coleta Contínua", `Pegue ${missions.renewableTarget} maçãs`, missions.totalApplesCollected, missions.renewableTarget, 50, 'renewable');
+            container.innerHTML += createMissionItem("Sob a Chuva", `Pegue ${missions.rainTarget} maçãs na chuva`, missions.rainApplesCollected, missions.rainTarget, 100, 'rain');
+            container.innerHTML += createMissionItem("Caçador de Cores", `Pegue ${missions.rainbowTarget} Maçã Arco-Íris`, missions.rainbowCollected, missions.rainbowTarget, 250, 'rainbow');
+            container.innerHTML += createMissionItem("Explorador Espacial", `Pegue ${missions.spaceTarget} Maçã do Espaço`, missions.spaceCollected, missions.spaceTarget, 1000, 'space');
+        }
+
+        window.claimMission = function(type, reward) {
+            coins += reward;
+            if (type === 'progression') missions.progressionTarget += 100;
+            else if (type === 'renewable') { missions.totalApplesCollected -= missions.renewableTarget; missions.renewableTarget += 25; }
+            else if (type === 'rain') { missions.rainApplesCollected -= missions.rainTarget; missions.rainTarget += 20; }
+            else if (type === 'rainbow') { missions.rainbowCollected -= missions.rainbowTarget; missions.rainbowTarget += 1; }
+            else if (type === 'space') { missions.spaceCollected -= missions.spaceTarget; missions.spaceTarget += 1; }
+            saveData(); updateUI(); renderMissions();
+        };
+
+        // --- SISTEMA DE COMPRA RÁPIDA (HUD) ---
+        function updateUI() {
+            statsDisplay.innerHTML = `Recorde: ${highScore}<br>Moedas: 🪙 ${coins}`;
+            document.getElementById('scoreDisplay').innerText = `Pontos: ${score}`;
+            document.getElementById('coinsDisplay').innerHTML = activeDouble ? `🪙 ${coins} <b style="color: #f39c12;">(2x)</b>` : `🪙 ${coins}`;
+
+            document.getElementById('btnBuyBasketMenu').innerText = inventory.basket || timerBasket > 0 ? "Equipado" : "Comprar";
+            document.getElementById('btnBuyBasketMenu').disabled = inventory.basket || timerBasket > 0 || coins < PRECOS.basket;
+            document.getElementById('btnBuyDoubleMenu').innerText = activeDouble ? "Equipado" : "Comprar";
+            document.getElementById('btnBuyDoubleMenu').disabled = activeDouble || coins < PRECOS.double;
+            document.getElementById('btnBuySlowMoMenu').innerText = inventory.slowmo || timerSlowMo > 0 ? "Equipado" : "Comprar";
+            document.getElementById('btnBuySlowMoMenu').disabled = inventory.slowmo || timerSlowMo > 0 || coins < PRECOS.slowmo;
+
+            const btnSlow = document.getElementById('btnUseSlowMo'); const txtSlow = document.getElementById('txtBtnSlow');
+            if (timerSlowMo > 0) { txtSlow.innerText = "Uso"; btnSlow.disabled = true; } 
+            else if (inventory.slowmo) { txtSlow.innerText = "Usar"; btnSlow.disabled = false; } 
+            else { txtSlow.innerText = `🪙 ${PRECOS.slowmo}`; btnSlow.disabled = coins < PRECOS.slowmo; }
+
+            const btnBasket = document.getElementById('btnUseBasket'); const txtBasket = document.getElementById('txtBtnBasket');
+            if (timerBasket > 0) { txtBasket.innerText = "Uso"; btnBasket.disabled = true; } 
+            else if (inventory.basket) { txtBasket.innerText = "Usar"; btnBasket.disabled = false; } 
+            else { txtBasket.innerText = `🪙 ${PRECOS.basket}`; btnBasket.disabled = coins < PRECOS.basket; }
+
+            renderConfigUI();
+        }
+
+        window.buyPowerUp = function(type) {
+            if (coins >= PRECOS[type]) {
+                if (type === 'basket' && !inventory.basket && timerBasket === 0) { coins -= PRECOS.basket; inventory.basket = true; }
+                if (type === 'double' && !activeDouble) { coins -= PRECOS.double; activeDouble = true; }
+                if (type === 'slowmo' && !inventory.slowmo && timerSlowMo === 0) { coins -= PRECOS.slowmo; inventory.slowmo = true; }
+                saveData(); updateUI();
+            }
+        };
+
+        window.handleQuickAbility = function(type) {
+            if (type === 'basket') {
+                if (timerBasket > 0) return;
+                if (inventory.basket) { useBasket(true); } 
+                else if (coins >= PRECOS.basket) { coins -= PRECOS.basket; useBasket(true); }
+            } else if (type === 'slowmo') {
+                if (timerSlowMo > 0) return;
+                if (inventory.slowmo) { useSlowMo(true); } 
+                else if (coins >= PRECOS.slowmo) { coins -= PRECOS.slowmo; useSlowMo(true); }
+            }
+        };
+
+        function useBasket(force = false) { if (inventory.basket || force) { basket.width = basketBaseWidth * 1.5; timerBasket = 600; inventory.basket = false; saveData(); updateUI(); } }
+        function useSlowMo(force = false) { if (inventory.slowmo || force) { timerSlowMo = 300; inventory.slowmo = false; saveData(); updateUI(); } }
+
+        window.togglePause = function() {
+            if (!gameRunning) return;
+            if (isPaused) {
+                ui.style.display = 'none'; startCountdown(() => { isPaused = false; update(); });
+            } else {
+                isPaused = true; ui.style.display = 'flex';
+                document.getElementById('uiTitle').innerText = 'Menu'; document.getElementById('uiTitle').style.color = '#f39c12';
+                document.getElementById('uiDesc').innerText = 'Personalize, compre vantagens ou ajuste opções!';
+                document.getElementById('startBtn').innerText = 'Voltar ao Jogo';
+                updateUI();
+            }
+        };
+
+        function startCountdown(callback) {
+            let count = 3; const overlay = document.getElementById('countdownOverlay');
+            overlay.style.display = 'flex'; overlay.innerText = count;
+            let interval = setInterval(() => {
+                count--;
+                if (count > 0) { overlay.innerText = count; } else if (count === 0) { overlay.innerText = 'VAI!'; } 
+                else { clearInterval(interval); overlay.style.display = 'none'; callback(); }
+            }, 1000);
+        }
+
+        // --- MENSAGENS DE FIM DE JOGO ---
+        function getEndGameMessage(finalScore) {
+            const pessimo = [ "Sério isso? Minha avó faria melhor!", "Você estava com a tela desligada?", "Oops... acho que a cesta estava furada.", "soubrou nada, betinha" ];
+
+
+            const medio = [ "Nada mau, mas dá pra melhorar!", "Aquecendo os motores...", "Mais um pouco e você fica bom nisso!" ];
+
+
+            const bom = [ "Aí sim! Mandou bem na colheita!", "Bela pontuação! As maçãs não tiveram chance.", "Já pode abrir uma quitanda!" ];
+
+
+            const excelente = [ "LENDÁRIO! Você é o mestre das maçãs!", "Incrível! Choveu maçã e você pegou todas!", "Impressionante! Reflexos de ninja da colheita!" ];
+            
+            let pool = [];
+            if (finalScore < 50) pool = pessimo; else if (finalScore < 100) pool = medio;
+            else if (finalScore < 250) pool = bom; else pool = excelente;
+            
+            return pool[Math.floor(Math.random() * pool.length)];
+        }
+
+        // --- SISTEMA VISUAL E DE EVENTOS SUAVES ---
+        function triggerBanner(text, color) {
+            eventBanner.innerText = text; eventBanner.style.color = color;
+            eventBanner.style.opacity = '1'; eventBanner.style.transform = 'translate(-50%, -50%) scale(1.1)';
+            setTimeout(() => { eventBanner.style.transform = 'translate(-50%, -50%) scale(1)'; }, 100);
+            setTimeout(() => { eventBanner.style.opacity = '0'; }, 3500);
+        }
+
+        function spawnParticles(x, y, isGolden) {
+            const amount = isGolden ? 20 : 12;
+            for(let i = 0; i < amount; i++) {
+                particles.push({
+                    x: x, y: y, vx: (Math.random() - 0.5) * (isGolden ? 12 : 8), vy: (Math.random() - 1) * (isGolden ? 8 : 6),
+                    life: 1.0, type: isGolden ? 'star' : (Math.random() > 0.5 ? 'circle' : 'square'),
+                    color: isGolden ? '#f1c40f' : (Math.random() > 0.5 ? getActiveSkinColor('apple') : '#ecf0f1')
+                });
+            }
+        }
+
+        function drawStar(cx, cy, spikes, outerRadius, innerRadius, color) {
+            let rot = Math.PI / 2 * 3; let x = cx, y = cy; let step = Math.PI / spikes;
+            ctx.beginPath(); ctx.moveTo(cx, cy - outerRadius);
+            for (let i = 0; i < spikes; i++) {
+                x = cx + Math.cos(rot) * outerRadius; y = cy + Math.sin(rot) * outerRadius; ctx.lineTo(x, y); rot += step;
+                x = cx + Math.cos(rot) * innerRadius; y = cy + Math.sin(rot) * innerRadius; ctx.lineTo(x, y); rot += step;
+            }
+            ctx.lineTo(cx, cy - outerRadius); ctx.closePath(); ctx.fillStyle = color; ctx.fill();
+        }
+
+        function drawBackground() {
+            if (imagensCarregadas.fundo.complete && imagensCarregadas.fundo.naturalHeight !== 0) { ctx.drawImage(imagensCarregadas.fundo, 0, 0, canvas.width, canvas.height); } 
+            else { ctx.clearRect(0, 0, canvas.width, canvas.height); }
+            ctx.fillStyle = '#2ECC71'; ctx.fillRect(0, canvas.height - 30, canvas.width, 30);
+        }
+
+        function drawRainbow() {
+            ctx.lineWidth = 15;
+            const colors = ['#FF0000', '#FF7F00', '#FFFF00', '#00FF00', '#0000FF', '#4B0082', '#8B00FF'];
+            let maxRadius = canvas.width > canvas.height ? canvas.width/2 : canvas.height/2;
+            for(let i=0; i<colors.length; i++) {
+                ctx.beginPath();
+                ctx.arc(canvas.width/2, canvas.height, maxRadius - (i*15), Math.PI, Math.PI * 2);
+                ctx.strokeStyle = colors[i]; ctx.globalAlpha = 0.5 * eventIntensity; ctx.stroke();
+            }
+            ctx.globalAlpha = 1.0; ctx.lineWidth = 1;
+        }
+
+        function drawLightningBolt() {
+            ctx.beginPath();
+            let lx = lightningX; let ly = 0;
+            ctx.moveTo(lx, ly);
+            while(ly < canvas.height) {
+                let dx = (Math.random() - 0.5) * 60;
+                let dy = Math.random() * 50 + 20;
+                lx += dx; ly += dy;
+                ctx.lineTo(lx, ly);
+            }
+            ctx.strokeStyle = `rgba(255, 255, 255, ${lightningTimer/20})`;
+            ctx.lineWidth = 4;
+            ctx.stroke();
+        }
+
+        function handleEventsVisuals() {
+            if (activeEvent === 'rain') {
+                ctx.fillStyle = `rgba(0,0,30,${0.4 * eventIntensity})`; 
+                ctx.fillRect(0,0,canvas.width,canvas.height);
+                
+                // Sistema de Raio com Temporizador
+                if (lightningTimer === 0 && Math.random() < (0.01 * eventIntensity)) { 
+                    lightningTimer = 20; 
+                    lightningX = Math.random() * canvas.width;
+                }
+
+                if (lightningTimer > 0) {
+                    ctx.fillStyle = `rgba(255,255,255,${(lightningTimer/20) * 0.8})`; 
+                    ctx.fillRect(0,0,canvas.width,canvas.height);
+                    drawLightningBolt();
+                    lightningTimer--;
+                }
+            } else if (activeEvent === 'rainbow') { 
+                drawRainbow(); 
+            }
+
+            if (activeEvent === 'rain' && Math.random() < eventIntensity) {
+                for(let i=0; i<5; i++) weatherParticles.push({x: Math.random()*canvas.width, y: -20, vx: (Math.random()-0.5)*2, vy: 15 + Math.random()*5, type: 'rain'});
+            } else if (activeEvent === 'wind_left' && Math.random() < (0.4 * eventIntensity)) {
+                weatherParticles.push({x: canvas.width + 20, y: Math.random()*canvas.height, vx: -12 - Math.random()*5, vy: 0, type: 'wind'});
+            } else if (activeEvent === 'wind_right' && Math.random() < (0.4 * eventIntensity)) {
+                weatherParticles.push({x: -20, y: Math.random()*canvas.height, vx: 12 + Math.random()*5, vy: 0, type: 'wind'});
+            }
+
+            ctx.strokeStyle = `rgba(255,255,255,${0.5 * eventIntensity})`; ctx.lineWidth = 2;
+            for(let i=0; i<weatherParticles.length; i++) {
+                let wp = weatherParticles[i]; wp.x += wp.vx; wp.y += wp.vy;
+                
+                // Espatifar Chuva na Cesta
+                if (wp.type === 'rain' && wp.y >= basket.y && wp.y <= basket.y + 20 && wp.x >= basket.x && wp.x <= basket.x + basket.width) {
+                    for(let k=0; k<3; k++) particles.push({x: wp.x, y: basket.y, vx: (Math.random()-0.5)*4, vy: -Math.random()*3 - 2, life: 1.0, type: 'circle', color: '#3498db'});
+                    weatherParticles.splice(i, 1); i--; continue;
+                }
+
+                ctx.beginPath(); ctx.moveTo(wp.x, wp.y);
+                if(wp.type === 'rain') ctx.lineTo(wp.x - wp.vx, wp.y - 15);
+                else if (wp.type === 'wind') ctx.lineTo(wp.x - wp.vx*3, wp.y - wp.vy*3);
+                ctx.stroke();
+
+                if (wp.x < -100 || wp.x > canvas.width + 100 || wp.y < -100 || wp.y > canvas.height + 100) { weatherParticles.splice(i, 1); i--; }
+            }
+            ctx.lineWidth = 1;
+        }
+
+        function manageEventLogic() {
+            if (!eventsEnabled || highScore < 200) { activeEvent = 'none'; eventIntensity = 0; return; }
+
+            if (activeEvent !== 'none') {
+                eventDuration--;
+                if (eventDuration > 60) eventIntensity = Math.min(1.0, eventIntensity + 0.02);
+                else if (eventDuration <= 60 && eventDuration > 0) eventIntensity = Math.max(0.0, eventIntensity - 0.02);
+
+                if (eventDuration <= 0) {
+                    if (activeEvent === 'rain' && Math.random() < 0.5) {
+                        activeEvent = 'rainbow'; eventDuration = 900; eventIntensity = 0; 
+                        triggerBanner('🌈 Arco-íris da Sorte!', '#f39c12');
+                    } else {
+                        activeEvent = 'none'; eventIntensity = 0;
+                        eventCooldown = 600 + Math.random() * 600; 
+                    }
+                }
+            } else {
+                eventCooldown--;
+                if (eventCooldown <= 0) {
+                    const eventPool = ['wind_left', 'wind_right', 'rain', 'rain'];
+                    activeEvent = eventPool[Math.floor(Math.random() * eventPool.length)];
+                    eventDuration = 900 + Math.random() * 600; 
+                    eventIntensity = 0; lightningTimer = 0;
+                    if(activeEvent.startsWith('wind')) triggerBanner('💨 Ventania!', '#ecf0f1');
+                    else if(activeEvent === 'rain') triggerBanner('⛈️ Chuva Forte!', '#3498db');
+                }
+            }
+        }
+
+        function drawBasket() {
+            let currentHeight = basket.height + basketBounce; let currentY = basket.y - (basketBounce / 2);
+            let blink = (timerBasket > 0 && timerBasket < 120) && Math.floor(Date.now() / 150) % 2 === 0;
+            if (imagensCarregadas.cestaBase.complete && imagensCarregadas.cestaBase.naturalHeight !== 0) {
+                ctx.drawImage(imagensCarregadas.cestaBase, basket.x, currentY, basket.width, currentHeight);
+            } else {
+                ctx.fillStyle = blink ? '#e74c3c' : (timerBasket > 0 ? '#F1C40F' : getActiveSkinColor('basket'));
+                ctx.beginPath(); ctx.roundRect(basket.x, currentY, basket.width, currentHeight, 10); ctx.fill();
+            }
+        }
+
+        function drawApple(apple) {
+            if(apple.type === 'space') {
+                ctx.fillStyle = '#111122'; ctx.shadowBlur = 15; ctx.shadowColor = '#00ffff';
+                ctx.beginPath(); ctx.arc(apple.x, apple.y, apple.radius, 0, Math.PI * 2); ctx.fill(); ctx.shadowBlur = 0;
+                ctx.fillStyle = 'white';
+                ctx.fillRect(apple.x - 5, apple.y - 2, 1, 1); ctx.fillRect(apple.x + 3, apple.y + 4, 1.5, 1.5); ctx.fillRect(apple.x + 1, apple.y - 6, 1, 1);
+            } else if (apple.type === 'rainbow') {
+                let grad = ctx.createLinearGradient(apple.x - apple.radius, apple.y - apple.radius, apple.x + apple.radius, apple.y + apple.radius);
+                grad.addColorStop(0, "red"); grad.addColorStop(0.2, "orange"); grad.addColorStop(0.4, "yellow"); grad.addColorStop(0.6, "green"); grad.addColorStop(0.8, "blue"); grad.addColorStop(1, "purple");
+                ctx.fillStyle = grad; ctx.shadowBlur = 10; ctx.shadowColor = 'white';
+                ctx.beginPath(); ctx.arc(apple.x, apple.y, apple.radius, 0, Math.PI * 2); ctx.fill(); ctx.shadowBlur = 0;
+            } else {
+                ctx.fillStyle = apple.type === 'golden' ? 'rgba(241, 196, 15, 0.4)' : 'rgba(255,255,255, 0.3)';
+                for (let j = 0; j < apple.history.length; j++) {
+                    let pos = apple.history[j]; let trailRadius = apple.radius * (j / apple.history.length);
+                    ctx.beginPath(); ctx.arc(pos.x, pos.y, trailRadius, 0, Math.PI * 2); ctx.fill();
+                }
+                if (imagensCarregadas.macaBase.complete && imagensCarregadas.macaBase.naturalHeight !== 0 && apple.type !== 'golden') {
+                    ctx.drawImage(imagensCarregadas.macaBase, apple.x - apple.radius, apple.y - apple.radius, apple.radius * 2, apple.radius * 2);
+                } else {
+                    ctx.fillStyle = apple.type === 'golden' ? '#F1C40F' : getActiveSkinColor('apple');
+                    if (apple.type === 'golden') { ctx.shadowBlur = 15; ctx.shadowColor = '#F1C40F'; }
+                    ctx.beginPath(); ctx.arc(apple.x, apple.y, apple.radius, 0, Math.PI * 2); ctx.fill(); ctx.shadowBlur = 0;
+                    ctx.fillStyle = '#27AE60'; ctx.fillRect(apple.x - 2, apple.y - apple.radius - 5, 4, 8);
+                }
+            }
+        }
+
+        function spawnApple() {
+            const radius = 15; let groupId = Date.now();
+            let ySpawn = -radius;
+
+            if (activeEvent === 'rainbow' && Math.random() < eventIntensity) {
+                // Durante arco-iris, cai misturado dourado e arco-iris
+                let t = Math.random() < 0.2 ? 'rainbow' : 'golden';
+                apples.push({ x: Math.random() * (canvas.width - radius * 2) + radius, y: ySpawn, radius: radius, type: t, groupId: groupId, history: [] });
+                return;
+            }
+
+            let chanceRaridade = Math.random();
+            let tipoCerto = 'normal';
+
+            if (chanceRaridade < 0.001) tipoCerto = 'space'; // 0.1% chance
+            else if (chanceRaridade < 0.011) tipoCerto = 'rainbow'; // 1% chance
+            else if (chanceRaridade < 0.061) tipoCerto = 'golden'; // 5% chance
+
+            if (tipoCerto === 'normal') {
+                apples.push({ x: Math.random() * (canvas.width - radius * 2) + radius, y: ySpawn, radius: radius, type: tipoCerto, groupId: groupId, history: [] });
+            } else {
+                // Se spawna rara, spawna uma normal junto para balancear
+                let x1 = Math.random() * (canvas.width - radius * 2) + radius;
+                let x2 = Math.random() * (canvas.width - radius * 2) + radius;
+                apples.push({ x: x1, y: ySpawn, radius: radius, type: 'normal', groupId: groupId, history: [] });
+                apples.push({ x: x2, y: ySpawn, radius: radius, type: tipoCerto, groupId: groupId, history: [] });
+            }
+        }
+
+        function update() {
+            if (!gameRunning || isPaused) return; drawBackground();
+
+            manageEventLogic(); handleEventsVisuals();
+
+            if (timerBasket > 0) { timerBasket--; if (timerBasket === 0) { basket.width = basketBaseWidth; updateUI(); } }
+            
+            let currentSpeedMultiplier = 1.0; let currentSpawnRate = appleSpawnRate;
+
+            if (timerSlowMo > 0) { 
+                timerSlowMo--; currentSpeedMultiplier *= 0.4; currentSpawnRate *= 2;
+                vignetteOverlay.style.opacity = timerSlowMo < 120 ? (Math.floor(Date.now() / 150) % 2 === 0 ? "0.8" : "0.2") : "0.8";
+                if (timerSlowMo === 0) { updateUI(); vignetteOverlay.style.opacity = "0"; }
+            } else { vignetteOverlay.style.opacity = "0"; }
+
+            if (basketBounce > 0) { basketBounce *= 0.8; if (basketBounce < 0.5) basketBounce = 0; }
+            drawBasket();
+
+            appleSpawnTimer++; if (appleSpawnTimer > currentSpawnRate) { spawnApple(); appleSpawnTimer = 0; }
+
+            for (let i = 0; i < apples.length; i++) {
+                let a = apples[i]; 
+                
+                if (activeEvent === 'wind_left') a.x -= (2 * eventIntensity);
+                if (activeEvent === 'wind_right') a.x += (2 * eventIntensity);
+                if (a.x < a.radius) a.x = a.radius; if (a.x > canvas.width - a.radius) a.x = canvas.width - a.radius;
+
+                a.y += (appleSpeed * currentSpeedMultiplier);
+                a.history.push({x: a.x, y: a.y}); if (a.history.length > 6) a.history.shift();
+                drawApple(a);
+
+                // Colisão
+                if (a.y + a.radius > basket.y && a.y - a.radius < basket.y + basket.height && a.x + a.radius > basket.x && a.x - a.radius < basket.x + basket.width) {
+                    somColeta.currentTime = 0; somColeta.play().catch(()=>{});
+                    basketBounce = 15; spawnParticles(a.x, basket.y, a.type === 'golden' || a.type === 'rainbow');
+                    caughtGroups.add(a.groupId);
+
+                    let ganhoMoedas = activeDouble ? 2 : 1;
+                    let pontosGanhos = 1; let moedasGanhos = 1; let corTexto = '#2ECC71';
+
+                    if (a.type === 'golden') { pontosGanhos = 3; moedasGanhos = 5; corTexto = '#F1C40F'; }
+                    else if (a.type === 'rainbow') { pontosGanhos = 25; moedasGanhos = 25; corTexto = '#9b59b6'; missions.rainbowCollected++; }
+                    else if (a.type === 'space') { pontosGanhos = 75; moedasGanhos = 75; corTexto = '#00ffff'; missions.spaceCollected++; }
+
+                    score += pontosGanhos; coins += moedasGanhos * ganhoMoedas;
+                    floatingTexts.push({ x: a.x, y: basket.y - 10, text: "+" + pontosGanhos, color: corTexto, life: 1.0 });
+
+                    runApples += 1;
+                    if (activeEvent === 'rain') missions.rainApplesCollected++; 
+                    
+                    updateUI(); apples.splice(i, 1); i--;
+                    
+                    if (score % 10 === 0) { appleSpeed += 0.5; if (appleSpawnRate > 20) appleSpawnRate -= 5; }
+                    continue;
+                }
+                if (a.y - a.radius > canvas.height) { 
+                    if (!caughtGroups.has(a.groupId)) { gameOver(); break; } 
+                    else { apples.splice(i, 1); i--; }
+                }
+            }
+
+            // Atualiza Textos Flutuantes
+            for(let i = 0; i < floatingTexts.length; i++) {
+                let ft = floatingTexts[i]; ft.y -= 2; ft.life -= 0.03; 
+                if(ft.life <= 0) { floatingTexts.splice(i, 1); i--; continue; }
+                ctx.globalAlpha = ft.life; ctx.fillStyle = ft.color; ctx.font = "bold 20px 'Segoe UI', Arial";
+                ctx.textAlign = "center"; ctx.shadowColor = "black"; ctx.shadowBlur = 4;
+                ctx.fillText(ft.text, ft.x, ft.y); ctx.shadowBlur = 0;
+            }
+            ctx.globalAlpha = 1.0;
+
+            for(let i = 0; i < particles.length; i++) {
+                let p = particles[i]; p.x += p.vx; p.y += p.vy; p.vy += 0.3; p.life -= 0.04;
+                if(p.life <= 0) { particles.splice(i, 1); i--; continue; }
+                ctx.globalAlpha = p.life;
+                if (p.type === 'circle') { ctx.fillStyle = p.color; ctx.beginPath(); ctx.arc(p.x, p.y, 4, 0, Math.PI*2); ctx.fill(); } 
+                else if (p.type === 'square') { ctx.fillStyle = p.color; ctx.fillRect(p.x - 3, p.y - 3, 6, 6); } 
+                else if (p.type === 'star') { drawStar(p.x, p.y, 5, 6, 3, p.color); }
+            }
+            ctx.globalAlpha = 1.0; 
+            if (gameRunning) animationId = requestAnimationFrame(update);
+        }
+
+        function gameOver() {
+            somGameOver.play().catch(()=>{}); gameRunning = false; isPaused = false; cancelAnimationFrame(animationId);
+            vignetteOverlay.style.opacity = "0"; iniciarMusicaLobby();
+            
+            if (score > highScore) { highScore = score; }
+            missions.totalApplesCollected += runApples; saveData();
+            
+            inventory = { basket: true, double: true, slowmo: true };
+            activeDouble = false; timerBasket = 0; timerSlowMo = 0; basketBounce = 0; 
+            particles = []; weatherParticles = []; floatingTexts = []; caughtGroups.clear();
+            activeEvent = 'none'; eventBanner.style.opacity = '0'; updateUI();
+
+            ui.style.display = 'flex'; 
+            document.getElementById('uiTitle').innerText = 'Fim de Jogo!'; document.getElementById('uiTitle').style.color = '#C0392B';
+            
+            let msg = getEndGameMessage(score);
+            document.getElementById('uiDesc').innerHTML = `<b>${msg}</b><br><br>Você atingiu ${score} pontos.<br>Total de moedas: 🪙 ${coins}`;
+            document.getElementById('startBtn').innerText = 'Tentar Novamente';
+        }
+
+/*===============================*/
+        function startGame() {
+            score = 0; runApples = 0; appleSpeed = 10; appleSpawnRate = 35; 
+            apples = []; particles = []; weatherParticles = []; floatingTexts = []; caughtGroups.clear();
+            basket.x = canvas.width / 2 - basket.width / 2; basket.width = basketBaseWidth; timerBasket = 0; timerSlowMo = 0;
+            activeDouble = inventory.double; if (inventory.double) inventory.double = false;
+            
+            activeEvent = 'none'; eventDuration = 0; eventCooldown = 600; eventIntensity = 0; lightningTimer = 0;
+            eventBanner.style.opacity = '0';
+
+            updateUI(); gameRunning = true; isPaused = false; ui.style.display = 'none';
+            iniciarMusicaJogo(); update();
+        }
+
+        document.getElementById('startBtn').addEventListener('click', () => { if (isPaused) togglePause(); else startGame(); });
+        function moveBasket(clientX) { let novaPosicao = clientX - basket.width / 2; if (novaPosicao < 0) novaPosicao = 0; if (novaPosicao + basket.width > canvas.width) novaPosicao = canvas.width - basket.width; basket.x = novaPosicao; }
+        canvas.addEventListener('touchmove', (e) => { e.preventDefault(); moveBasket(e.touches[0].clientX); }, { passive: false });
+        canvas.addEventListener('mousemove', (e) => { moveBasket(e.clientX); });
+        window.addEventListener('resize', () => { canvas.width = window.innerWidth; canvas.height = window.innerHeight; if(!gameRunning) { basket.x = canvas.width / 2 - basket.width / 2; basket.y = canvas.height - 60; } });
+        updateUI();
+    </script>
+</body>
+</html>
+

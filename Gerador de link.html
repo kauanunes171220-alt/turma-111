@@ -1,0 +1,449 @@
+<!DOCTYPE html>
+<html lang="pt-br">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Gerador de QR Code Pro</title>
+    <script type="text/javascript" src="https://unpkg.com/qr-code-styling@1.5.0/lib/qr-code-styling.js"></script>
+    <style>
+/* ====================================================
+   LICENÇA DE USO EXCLUSIVA - DESENVOLVIDO PELA 111 =======================================================
+ * [AVISO]: A edição de qualquer linha lógica deste código, fora das áreas explicitamente liberadas, será rastreada e considerada PLÁGIO intelectual. 
+ 
+ * Se você não é da 111, sua única função aqui é observar e tentar aprender. Mexer sem autorização é admitir que sua turma não tem capacidade de criar algo próprio.
+ 
+ * 111: Onde o talento sobra e a concorrência chora.
+ 
+==================================================== */
+        :root {
+            --bg-color: #f0f2f5;
+            --text-color: #1d1d1f;
+            --container-bg: #ffffff;
+            --border-color: #e1e4e8;
+            --primary: #6366f1;
+            --primary-hover: #4f46e5;
+            --success: #10b981;
+            --success-hover: #059669;
+            --input-bg: #ffffff;
+            --shadow: 0 10px 25px rgba(0,0,0,0.05);
+        }
+
+        body.dark-mode {
+            --bg-color: #0f1115;
+            --text-color: #f1f5f9;
+            --container-bg: #1e2128;
+            --border-color: #334155;
+            --primary: #818cf8;
+            --primary-hover: #6366f1;
+            --input-bg: #111827;
+            --shadow: 0 10px 25px rgba(0,0,0,0.3);
+        }
+
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, sans-serif;
+            background-color: var(--bg-color);
+            color: var(--text-color);
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            min-height: 100vh;
+            padding: 20px;
+            transition: all 0.3s ease;
+        }
+
+        .container {
+            background-color: var(--container-bg);
+            border-radius: 16px;
+            box-shadow: var(--shadow);
+            width: 100%;
+            max-width: 800px;
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 30px;
+            padding: 40px;
+            transition: all 0.3s ease;
+        }
+
+        .header {
+            grid-column: 1 / -1;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            border-bottom: 1px solid var(--border-color);
+            padding-bottom: 15px;
+            margin-bottom: 10px;
+        }
+
+        h2 { font-size: 1.8rem; font-weight: 700; }
+
+        .theme-btn {
+            background: var(--input-bg);
+            border: 1px solid var(--border-color);
+            border-radius: 50%;
+            width: 40px;
+            height: 40px;
+            font-size: 1.2rem;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: var(--text-color);
+            transition: transform 0.2s;
+        }
+
+        .theme-btn:hover { transform: scale(1.1); }
+
+        .settings-panel { display: flex; flex-direction: column; gap: 15px; }
+
+        .input-group {
+            display: flex;
+            flex-direction: column;
+        }
+
+        label {
+            font-weight: 600;
+            margin-bottom: 8px;
+            font-size: 0.9rem;
+            color: var(--text-color);
+            opacity: 0.9;
+        }
+
+        input[type="text"], input[type="file"], select, input[type="color"] {
+            padding: 12px;
+            border: 1px solid var(--border-color);
+            border-radius: 8px;
+            background-color: var(--input-bg);
+            color: var(--text-color);
+            font-size: 1rem;
+            outline: none;
+            transition: border-color 0.2s;
+        }
+
+        input[type="color"] {
+            padding: 2px;
+            height: 40px;
+            cursor: pointer;
+        }
+
+        .color-group {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 15px;
+        }
+
+        .preview-panel {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            background-color: var(--bg-color);
+            border-radius: 12px;
+            padding: 20px;
+            border: 2px dashed var(--border-color);
+        }
+
+        #qrcode {
+            background-color: #fff;
+            padding: 15px;
+            border-radius: 12px;
+            box-shadow: 0 4px 6px rgba(0,0,0,0.05);
+            margin-bottom: 20px;
+        }
+
+        button.action-btn {
+            background-color: var(--primary);
+            color: #fff;
+            border: none;
+            padding: 14px 24px;
+            border-radius: 8px;
+            cursor: pointer;
+            font-weight: bold;
+            font-size: 1rem;
+            width: 100%;
+            transition: background-color 0.2s, transform 0.1s;
+        }
+        .footer-claim {
+            grid-column: 1 / -1;
+            text-align: center;
+            font-size: 0.65rem;
+            opacity: 0.4;
+            margin-top: 20px;
+            letter-spacing: 1px;
+        }
+        button.action-btn:hover { background-color: var(--primary-hover); }
+        button.action-btn:active { transform: translateY(2px); }
+        button.action-btn:disabled { background-color: #a5b4fc; cursor: not-allowed; }
+
+        .btn-download { background-color: var(--success); display: none; }
+        .btn-download:hover { background-color: var(--success-hover); }
+
+        .dynamic-field { display: none; }
+
+        /* Estilo para a área de resultado do link */
+        #link-result {
+            display: none;
+            margin-top: 15px;
+            background-color: var(--bg-color);
+            padding: 15px;
+            border-radius: 8px;
+            border: 1px solid var(--border-color);
+        }
+
+        #link-result .copy-group {
+            display: flex;
+            gap: 10px;
+        }
+
+        @media (max-width: 768px) {
+            .container { grid-template-columns: 1fr; padding: 20px; }
+        }
+    </style>
+</head>
+<body>
+
+    <div class="container">
+        <div class="header">
+            <h2>Gerador QR Pro</h2>
+            <button class="theme-btn" onclick="toggleTheme()" id="theme-icon" title="Alternar Tema">🌙</button>
+        </div>
+        
+        <div class="settings-panel">
+            <div class="input-group">
+                <label for="type-select">O que você quer fazer?</label>
+                <select id="type-select" onchange="toggleFields()">
+                    <option value="url">Gerar QR de um Link/URL</option>
+                    <option value="image">Fazer Upload de Imagem e Gerar Link</option>
+                </select>
+            </div>
+
+            <div class="input-group dynamic-field" id="field-url" style="display: flex;">
+                <label>Cole seu Link aqui:</label>
+                <input type="text" id="url-input" placeholder="Ex: https://seusite.com">
+            </div>
+
+            <div class="input-group dynamic-field" id="field-image">
+                <label>Selecione a Foto para Upload:</label>
+                <input type="file" id="image-input" accept="image/png, image/jpeg, image/gif">
+                
+                <div id="link-result">
+                    <label>Link da Imagem Gerado:</label>
+                    <div class="copy-group">
+                        <input type="text" id="uploaded-url" readonly style="flex: 1;">
+                        <button class="action-btn" onclick="copyLink()" style="width: auto; padding: 12px; background-color: var(--success);">📋 Copiar</button>
+                    </div>
+                </div>
+            </div>
+
+            <div id="qr-settings" class="settings-panel" style="gap: 15px; margin-top: 5px;">
+                <div class="input-group">
+                    <label>Estilo do QR Code:</label>
+                    <select id="style-select">
+                        <option value="square">Quadrados Clássicos</option>
+                        <option value="dots">Bolinhas</option>
+                        <option value="rounded">Arredondado</option>
+                        <option value="classy">Classy</option>
+                    </select>
+                </div>
+
+                <div class="color-group">
+                    <div class="input-group">
+                        <label>Cor do QR:</label>
+                        <input type="color" id="color-dark" value="#000000">
+                    </div>
+                    <div class="input-group">
+                        <label>Cor do Fundo:</label>
+                        <input type="color" id="color-light" value="#ffffff">
+                    </div>
+                </div>
+            </div>
+
+            <button class="action-btn" id="btn-action" onclick="processAction()">✨ Gerar QR Code</button>
+        </div>
+
+        <div class="preview-panel">
+            <div id="qrcode"></div>
+            <button class="action-btn btn-download" id="download-btn" onclick="downloadQR()">📥 Baixar Imagem</button>
+<div class="footer-claim">
+    Propriedade intelectual da 111 — A única turma possível.
+</div>
+        </div>
+    </div>
+
+    <script>
+        // Chave do ImgBB implementada diretamente conforme solicitado
+        // Configurações Globais
+const IMGBB_API_KEY = "93bc110efd6996fddd7e73187ca4aaa6";
+const MAX_UPLOADS = 10;
+const COOLDOWN_TIME = 5 * 60 * 1000; // 5 minutos em milissegundos
+
+const qrCode = new QRCodeStyling({
+    width: 250,
+    height: 250,
+    type: "svg",
+    dotsOptions: { color: "#000000", type: "square" },
+    backgroundOptions: { color: "#ffffff" },
+    imageOptions: { crossOrigin: "anonymous", margin: 10 }
+});
+
+qrCode.append(document.getElementById("qrcode"));
+
+// Função para gerenciar o estado dos uploads no LocalStorage
+function getUploadStats() {
+    const stats = JSON.parse(localStorage.getItem('qr_pro_stats')) || { count: 0, cooldownStart: null };
+    return stats;
+}
+
+function saveUploadStats(stats) {
+    localStorage.setItem('qr_pro_stats', JSON.stringify(stats));
+}
+
+// Atualiza o texto do botão com base no limite
+function updateButtonUI() {
+    const type = document.getElementById("type-select").value;
+    const btn = document.getElementById("btn-action");
+    const stats = getUploadStats();
+
+    if (type === "image") {
+        if (stats.count >= MAX_UPLOADS) {
+            const now = Date.now();
+            const timePassed = now - stats.cooldownStart;
+
+            if (timePassed < COOLDOWN_TIME) {
+                const timeLeft = Math.ceil((COOLDOWN_TIME - timePassed) / 1000);
+                const minutes = Math.floor(timeLeft / 60);
+                const seconds = timeLeft % 60;
+                btn.innerHTML = `⏳ Aguarde ${minutes}:${seconds < 10 ? '0' : ''}${seconds}`;
+                btn.disabled = true;
+                btn.style.backgroundColor = "#94a3b8";
+                
+                // Atualiza o contador a cada segundo
+                setTimeout(updateButtonUI, 1000);
+                return;
+            } else {
+                // Resetar após o tempo de resfriamento
+                saveUploadStats({ count: 0, cooldownStart: null });
+            }
+        }
+        btn.disabled = false;
+        btn.style.backgroundColor = "var(--primary)";
+        btn.innerHTML = `☁️ Fazer Upload (${MAX_UPLOADS - stats.count} restantes)`;
+    } else {
+        btn.disabled = false;
+        btn.style.backgroundColor = "var(--primary)";
+        btn.innerHTML = "✨ Gerar QR Code";
+    }
+}
+
+function toggleTheme() {
+    const body = document.body;
+    const icon = document.getElementById("theme-icon");
+    body.classList.toggle("dark-mode");
+    icon.textContent = body.classList.contains("dark-mode") ? "☀️" : "🌙";
+}
+
+function toggleFields() {
+    const type = document.getElementById("type-select").value;
+    const qrSettings = document.getElementById("qr-settings");
+    const qrcodeDiv = document.getElementById("qrcode");
+    const downloadBtn = document.getElementById("download-btn");
+    const linkResult = document.getElementById("link-result");
+
+    document.querySelectorAll('.dynamic-field').forEach(el => el.style.display = 'none');
+    document.getElementById(`field-${type}`).style.display = 'flex';
+
+    linkResult.style.display = 'none';
+
+    if (type === "url") {
+        qrSettings.style.display = "flex";
+        qrcodeDiv.style.display = "block";
+    } else {
+        qrSettings.style.display = "none";
+        qrcodeDiv.style.display = "none";
+        downloadBtn.style.display = "none";
+    }
+    updateButtonUI();
+}
+
+async function processAction() {
+    const type = document.getElementById("type-select").value;
+    const btn = document.getElementById("btn-action");
+    const stats = getUploadStats();
+
+    if (type === "url") {
+        const finalData = document.getElementById("url-input").value;
+        if (!finalData) return alert("Por favor, preencha o campo de URL!");
+        
+        qrCode.update({
+            data: finalData,
+            dotsOptions: { color: document.getElementById("color-dark").value, type: document.getElementById("style-select").value },
+            backgroundOptions: { color: document.getElementById("color-light").value }
+        });
+        document.getElementById("download-btn").style.display = "block";
+        
+    } else if (type === "image") {
+        // Verificação final de segurança
+        if (stats.count >= MAX_UPLOADS) {
+            return alert("Limite atingido! Por favor, aguarde o tempo de resfriamento.");
+        }
+
+        const fileInput = document.getElementById("image-input");
+        if (!fileInput.files[0]) return alert("Selecione uma imagem!");
+
+        btn.innerHTML = "⏳ Enviando...";
+        btn.disabled = true;
+
+        try {
+            const formData = new FormData();
+            formData.append("image", fileInput.files[0]);
+
+            const response = await fetch(`https://api.imgbb.com/1/upload?key=${IMGBB_API_KEY}`, {
+                method: "POST",
+                body: formData
+            });
+
+            const result = await response.json();
+
+            if (result.success) {
+                // Atualizar estatísticas após sucesso
+                stats.count += 1;
+                if (stats.count >= MAX_UPLOADS) {
+                    stats.cooldownStart = Date.now();
+                }
+                saveUploadStats(stats);
+
+                document.getElementById("link-result").style.display = "block";
+                document.getElementById("uploaded-url").value = result.data.url;
+                updateButtonUI();
+            } else {
+                alert("Erro no servidor de imagens.");
+            }
+        } catch (error) {
+            alert("Erro de conexão.");
+        } finally {
+            updateButtonUI();
+        }
+    }
+}
+
+function copyLink() {
+    const copyText = document.getElementById("uploaded-url");
+    copyText.select();
+    navigator.clipboard.writeText(copyText.value).then(() => alert("Copiado!"));
+}
+
+function downloadQR() {
+    qrCode.download({ name: "meu-qr-code", extension: "png" });
+}
+
+// Inicia a UI corretamente
+updateButtonUI();
+    </script>
+</body>
+</html>
+

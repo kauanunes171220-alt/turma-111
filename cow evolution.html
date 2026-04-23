@@ -1,0 +1,722 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
+    <title>Cow Evolution Clone</title>
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Nunito:wght@400;700;900&display=swap');
+
+        :root {
+            --primary: #4CAF50;
+            --secondary: #8BC34A;
+            --accent: #FFC107;
+            --wood: #8D6E63;
+            --wood-dark: #5D4037;
+            --text-main: #2c3e50;
+        }
+
+        body {
+            font-family: 'Nunito', sans-serif;
+            background: radial-gradient(circle at top, #7bc04b 0%, #3e731b 100%);
+            margin: 0;
+            padding: 0;
+            display: flex;
+            flex-direction: column;
+            height: 100vh;
+            overflow: hidden;
+            user-select: none;
+            -webkit-user-select: none;
+        }
+
+        /* PAINEL SUPERIOR */
+        #ui-panel {
+            background: rgba(255, 255, 255, 0.9);
+            backdrop-filter: blur(10px);
+            -webkit-backdrop-filter: blur(10px);
+            padding: env(safe-area-inset-top, 10px) 15px 10px 15px;
+            text-align: center;
+            box-shadow: 0 4px 15px rgba(0,0,0,0.2);
+            z-index: 10;
+            border-bottom: 3px solid rgba(255,255,255,0.4);
+            border-radius: 0 0 20px 20px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            position: relative;
+        }
+
+        .header-top {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            width: 100%;
+            margin-bottom: 5px;
+        }
+
+        .money-display { 
+            font-size: 28px; 
+            font-weight: 900; 
+            color: #27ae60; 
+            text-shadow: 1px 1px 0px #fff;
+            flex-grow: 1;
+        }
+
+        .gps-display {
+            font-size: 13px;
+            color: #7f8c8d;
+            font-weight: bold;
+            background: #ecf0f1;
+            padding: 2px 10px;
+            border-radius: 10px;
+            margin-bottom: 8px;
+        }
+        
+        button {
+            background: linear-gradient(to bottom, #3498db, #2980b9);
+            color: white;
+            border: none;
+            padding: 10px 20px;
+            border-radius: 20px;
+            font-size: 15px;
+            font-weight: 900;
+            cursor: pointer;
+            box-shadow: 0 4px 0 #1c5980;
+            transition: all 0.1s;
+            font-family: 'Nunito', sans-serif;
+            text-transform: uppercase;
+        }
+        button:active { transform: translateY(4px); box-shadow: 0 0 0 #1c5980; }
+        button:disabled { background: #95a5a6; box-shadow: 0 4px 0 #7f8c8d; color: #ecf0f1; cursor: not-allowed; }
+
+        #btn-reset { 
+            background: linear-gradient(to bottom, #e74c3c, #c0392b); 
+            box-shadow: 0 3px 0 #922b21;
+            padding: 6px 12px; 
+            font-size: 11px; 
+        }
+
+        /* ÁREA DE JOGO */
+        #game-area {
+            flex-grow: 1;
+            position: relative;
+            overflow: hidden;
+            touch-action: none;
+        }
+
+        /* VACAS */
+        .vaca {
+            position: absolute;
+            cursor: grab;
+            width: 50px;
+            height: 50px;
+            transform: translate(-50%, -50%);
+            z-index: 1;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+        }
+        
+        .emoji-wrapper {
+            font-size: 40px;
+            filter: drop-shadow(0px 4px 2px rgba(0,0,0,0.3));
+            animation: breathe 2s infinite ease-in-out;
+            transition: transform 0.1s;
+        }
+
+        @keyframes breathe {
+            0%, 100% { transform: scale(1); }
+            50% { transform: scale(1.05) translateY(-2px); }
+        }
+
+        .vaca:active .emoji-wrapper { cursor: grabbing; transform: scale(1.1); filter: drop-shadow(0px 8px 5px rgba(0,0,0,0.4)); }
+
+        .vaca-lv {
+            position: absolute;
+            bottom: -5px;
+            left: 50%;
+            transform: translateX(-50%);
+            font-size: 11px;
+            background: #2c3e50;
+            color: #fff;
+            border-radius: 10px;
+            padding: 2px 6px;
+            font-weight: 900;
+            border: 2px solid #fff;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.4);
+            pointer-events: none;
+            white-space: nowrap;
+        }
+
+        /* PARTÍCULAS */
+        .particle {
+            position: absolute;
+            font-family: 'Nunito', sans-serif;
+            font-weight: 900;
+            font-size: 18px;
+            text-shadow: 0px 2px 3px rgba(0,0,0,0.8);
+            pointer-events: none;
+            animation: floatUp 0.8s cubic-bezier(0.25, 0.46, 0.45, 0.94) forwards;
+            z-index: 200;
+            transform: translate(-50%, -50%);
+        }
+        @keyframes floatUp {
+            0% { transform: translate(-50%, -50%) scale(0.8); opacity: 1; }
+            100% { transform: translate(-50%, -80px) scale(1); opacity: 0; }
+        }
+
+        /* CELEIRO (CRIADOR) */
+        #breeder-zone {
+            position: absolute;
+            bottom: calc(25px + env(safe-area-inset-bottom)); /* Proteção contra botões mobile */
+            left: 50%;
+            transform: translateX(-50%);
+            width: 220px;
+            height: 80px;
+            background: var(--wood);
+            border: 4px solid var(--wood-dark);
+            border-radius: 12px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            color: #fff;
+            font-weight: bold;
+            z-index: 5;
+            box-shadow: 0 5px 15px rgba(0,0,0,0.3), inset 0 0 10px rgba(0,0,0,0.5);
+            transition: all 0.2s;
+        }
+        #breeder-zone::before { /* Textura de madeira */
+            content: '';
+            position: absolute; top: 0; left: 0; right: 0; bottom: 0;
+            background: repeating-linear-gradient( 90deg, transparent, transparent 20px, rgba(0,0,0,0.1) 20px, rgba(0,0,0,0.1) 22px );
+            border-radius: 8px; pointer-events: none;
+        }
+
+        #breeder-zone.active-drop { background: #FFB300; border-color: #FF6F00; transform: translateX(-50%) scale(1.05); }
+        
+        #breeder-slots {
+            display: flex;
+            gap: 15px;
+            font-size: 25px;
+            margin-top: 2px;
+            z-index: 1;
+        }
+        .breeder-slot {
+            width: 35px; height: 35px;
+            background: rgba(0,0,0,0.3);
+            border-radius: 50%;
+            display: flex; align-items: center; justify-content: center;
+            box-shadow: inset 0 2px 4px rgba(0,0,0,0.5);
+        }
+
+        #breeder-title { z-index: 1; font-size: 13px; text-shadow: 1px 1px 2px rgba(0,0,0,0.8); }
+
+        #breeder-progress {
+            width: 80%; height: 8px; background: #2c3e50;
+            border-radius: 4px; margin-top: 5px; overflow: hidden; display: none; z-index: 1;
+            border: 1px solid #000;
+        }
+        #breeder-bar { height: 100%; background: #2ecc71; width: 0%; transition: width 1s linear; }
+
+        /* TELA DE BLOQUEIO DO CELEIRO */
+        #breeder-lock {
+            position: absolute; top: 0; left: 0; width: 100%; height: 100%;
+            background: rgba(0,0,0,0.7); backdrop-filter: blur(2px);
+            border-radius: 8px; display: flex; flex-direction: column;
+            justify-content: center; align-items: center; z-index: 10;
+        }
+        #btn-unlock-breeder {
+            font-size: 11px; padding: 6px 10px; background: linear-gradient(to bottom, #f1c40f, #f39c12);
+            box-shadow: 0 3px 0 #d35400; color: #fff; margin-top: 5px;
+        }
+
+        /* MODAL */
+        #modal-overlay {
+            position: fixed; top: 0; left: 0; width: 100%; height: 100%;
+            background: rgba(0,0,0,0.8); backdrop-filter: blur(5px);
+            display: none; justify-content: center; align-items: center; z-index: 1000;
+        }
+        .modal {
+            background: white; padding: 25px; border-radius: 20px; text-align: center;
+            width: 80%; max-width: 300px; box-shadow: 0 10px 30px rgba(0,0,0,0.5);
+            animation: popIn 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+        }
+        @keyframes popIn {
+            0% { transform: scale(0.5); opacity: 0; }
+            100% { transform: scale(1); opacity: 1; }
+        }
+        .modal h2 { margin-top: 0; color: #2c3e50; font-size: 22px; }
+        .modal p { font-size: 15px; color: #7f8c8d; margin-bottom: 10px; }
+        .modal .gain { font-size: 30px; font-weight: 900; color: #2ecc71; margin: 10px 0 20px 0; }
+
+    </style>
+</head>
+<body>
+
+    <div id="ui-panel">
+        <div class="header-top">
+            <button id="btn-reset" onclick="resetarSave()">RESET</button>
+            <div class="money-display">R$ <span id="money">0</span></div>
+            <div style="width: 60px;"></div> </div>
+        <div class="gps-display">Ganhos: R$ <span id="gps">0</span> / seg</div>
+        <button id="btn-buy" onclick="comprarVaca()">Comprar Vaca (R$ <span id="custo-vaca">10</span>)</button>
+    </div>
+
+    <div id="game-area">
+        <div id="breeder-zone">
+            <div id="breeder-lock">
+                <span style="font-size: 11px; text-shadow: 1px 1px 0 #000;">Celeiro Trancado</span>
+                <button id="btn-unlock-breeder" onclick="comprarBreeder()">Desbloquear R$ 10K</button>
+            </div>
+
+            <span id="breeder-title">Arraste 2 iguais</span>
+            <div id="breeder-slots">
+                <div class="breeder-slot" id="slot-1"></div>
+                <div class="breeder-slot" id="slot-2"></div>
+            </div>
+            <div id="breeder-progress"><div id="breeder-bar"></div></div>
+        </div>
+    </div>
+
+    <div id="modal-overlay">
+        <div class="modal">
+            <h2>Bem-vindo de volta! 👨‍🌾</h2>
+            <p>Enquanto você estava fora (<span id="off-time"></span>), suas vacas trabalharam duro!</p>
+            <div class="gain">R$ <span id="off-money">0</span></div>
+            <button style="width: 100%;" onclick="fecharModal()">Coletar</button>
+        </div>
+    </div>
+
+    <script>
+        // --- CONFIGURAÇÕES ---
+        const CONFIG = {
+            custoInicial: 10,
+            multiplicadorCusto: 1.25,
+            distanciaMerge: 50, // Diminuido devido ao novo tamanho das vacas
+            tempoBreederMs: 5 * 60 * 1000,
+            custoBreeder: 10000
+        };
+
+        const COW_STATS = {
+            1: { emoji: '🐄', cps: 1, clickValue: 1 },
+            2: { emoji: '🐂', cps: 4, clickValue: 3 },
+            3: { emoji: '🐃', cps: 15, clickValue: 10 },
+            4: { emoji: '🐑', cps: 50, clickValue: 35 },
+            5: { emoji: '🐏', cps: 200, clickValue: 100 },
+            6: { emoji: '🐐', cps: 350, clickValue: 125 },
+            7: { emoji: '🦌', cps: 600, clickValue: 200 },
+            8: { emoji: '🦙', cps: 1200, clickValue: 450 },
+            9: { emoji: '🐘', cps: 2500, clickValue: 900 },
+            10: { emoji: '🦣', cps: 5500, clickValue: 2000 },
+            11: { emoji: '🐍', cps: 12000, clickValue: 4500 },
+            12: { emoji: '🐊', cps: 25000, clickValue: 10000 },
+            13: { emoji: '🦕', cps: 60000, clickValue: 25000 },
+            14: { emoji: '🦖', cps: 150000, clickValue: 50000 },
+            15: { emoji: '🐉', cps: 400000, clickValue: 120000 },
+            16: { emoji: '🦄', cps: 1000000, clickValue: 500000 }
+        };
+
+        let gameState = {
+            money: 10,
+            custoAtual: CONFIG.custoInicial,
+            cows: [],
+            lastSaveTime: Date.now(),
+            breederUnlocked: false, // Nova variável
+            breeder: { level: null, count: 0, finishTime: null }
+        };
+
+        let dragState = { element: null, id: null, isDragging: false, hasMoved: false };
+
+        const gameArea = document.getElementById('game-area');
+        const breederZone = document.getElementById('breeder-zone');
+
+        // --- INICIALIZAÇÃO ---
+        function init() {
+            carregarJogo();
+            calcularOffline();
+            atualizarUI();
+            
+            gameState.cows.forEach(cow => criarElementoVaca(cow));
+            atualizarBreederUI();
+
+            setInterval(() => {
+                let ganho = calcularGanhosPorSegundo();
+                if (ganho > 0) {
+                    gameState.money += ganho;
+                    atualizarMoneyUI();
+                }
+            }, 1000);
+
+            setInterval(() => { gerarVacaGratis(); }, 15000);
+            setInterval(() => { loopBreeder(); salvarJogo(); }, 1000);
+        }
+
+        // --- OFFLINE FARMING ---
+        function calcularOffline() {
+            if (!gameState.lastSaveTime) return;
+            let diff = Date.now() - gameState.lastSaveTime;
+            let seconds = Math.floor(diff / 1000);
+            
+            if (seconds > 60) {
+                let gps = calcularGanhosPorSegundo();
+                if (gps > 0) {
+                    let earned = seconds * gps;
+                    gameState.money += earned;
+                    
+                    document.getElementById('off-time').innerText = formatarTempo(seconds);
+                    document.getElementById('off-money').innerText = formatarNumero(earned);
+                    document.getElementById('modal-overlay').style.display = 'flex';
+                }
+            }
+        }
+
+        function fecharModal() {
+            document.getElementById('modal-overlay').style.display = 'none';
+        }
+
+        function formatarTempo(segs) {
+            let m = Math.floor(segs / 60);
+            let h = Math.floor(m / 60);
+            if (h > 0) return `${h}h ${m % 60}m`;
+            return `${m} min`;
+        }
+
+        // --- SISTEMA DE SPAWN INTELIGENTE ---
+        function getPosicaoSegura() {
+            let areaRect = gameArea.getBoundingClientRect();
+            let attempts = 0;
+            let bestX = 50, bestY = 50;
+            let maxDist = 0;
+
+            while(attempts < 15) {
+                let x = Math.random() * (areaRect.width - 60) + 30;
+                // Deixa margem no top para a UI e bottom para o celeiro
+                let y = Math.random() * (areaRect.height - 150) + 30; 
+                
+                let minDist = 9999;
+                for(let c of gameState.cows) {
+                    let d = Math.hypot(c.x - x, c.y - y);
+                    if(d < minDist) minDist = d;
+                }
+                
+                if(minDist > 55) return {x, y};
+                
+                if(minDist > maxDist) { maxDist = minDist; bestX = x; bestY = y; }
+                attempts++;
+            }
+            return {x: bestX, y: bestY};
+        }
+
+        function comprarVaca() {
+            if (gameState.money >= gameState.custoAtual) {
+                gameState.money -= gameState.custoAtual;
+                gameState.custoAtual = Math.ceil(gameState.custoAtual * CONFIG.multiplicadorCusto);
+                
+                let pos = getPosicaoSegura();
+                let novaVaca = { id: Date.now() + Math.random(), level: 1, x: pos.x, y: pos.y };
+                
+                gameState.cows.push(novaVaca);
+                criarElementoVaca(novaVaca);
+                atualizarUI();
+                salvarJogo();
+            }
+        }
+
+        function gerarVacaGratis() {
+            if (gameState.cows.length >= 25) return;
+            let pos = getPosicaoSegura();
+            let novaVaca = { id: Date.now() + Math.random(), level: 1, x: pos.x, y: pos.y };
+            gameState.cows.push(novaVaca);
+            criarElementoVaca(novaVaca);
+            criarParticula("🎁", pos.x, pos.y, "#fff");
+            atualizarUI();
+        }
+
+        // --- NOVO: COMPRAR CELEIRO ---
+        function comprarBreeder() {
+            if (gameState.money >= CONFIG.custoBreeder && !gameState.breederUnlocked) {
+                gameState.money -= CONFIG.custoBreeder;
+                gameState.breederUnlocked = true;
+                criarParticula("Celeiro Desbloqueado!", window.innerWidth/2, window.innerHeight - 100, "#2ecc71");
+                atualizarUI();
+                atualizarBreederUI();
+                salvarJogo();
+            }
+        }
+
+        // --- DRAG, DROP & MERGE ---
+        function criarElementoVaca(cowData) {
+            const div = document.createElement('div');
+            div.className = 'vaca';
+            div.id = 'cow-' + cowData.id;
+            div.style.left = cowData.x + 'px';
+            div.style.top = cowData.y + 'px';
+            
+            // Emoji wrapper para animação + label absoluta
+            div.innerHTML = `
+                <div class="emoji-wrapper">${COW_STATS[cowData.level].emoji}</div>
+                <span class="vaca-lv">Lv ${cowData.level}</span>
+            `;
+            
+            div.addEventListener('pointerdown', iniciarDrag);
+            gameArea.appendChild(div);
+        }
+
+        function iniciarDrag(e) {
+            e.preventDefault();
+            const element = e.currentTarget;
+            dragState.element = element;
+            dragState.id = parseFloat(element.id.split('-')[1]);
+            dragState.isDragging = true;
+            dragState.hasMoved = false;
+
+            document.addEventListener('pointermove', arrastar);
+            document.addEventListener('pointerup', soltar);
+            
+            // Destaca o celeiro apenas se estiver desbloqueado
+            if(gameState.breederUnlocked) {
+                breederZone.classList.add('active-drop');
+            }
+        }
+
+        function arrastar(e) {
+            if (!dragState.isDragging) return;
+            const areaRect = gameArea.getBoundingClientRect();
+            let newX = e.clientX - areaRect.left;
+            let newY = e.clientY - areaRect.top;
+
+            if (Math.abs(newX - parseFloat(dragState.element.style.left)) > 5 || 
+                Math.abs(newY - parseFloat(dragState.element.style.top)) > 5) {
+                dragState.hasMoved = true;
+            }
+
+            newX = Math.max(25, Math.min(newX, areaRect.width - 25));
+            newY = Math.max(25, Math.min(newY, areaRect.height - 25));
+
+            dragState.element.style.left = newX + 'px';
+            dragState.element.style.top = newY + 'px';
+            dragState.element.style.zIndex = "1000";
+
+            let cowData = gameState.cows.find(c => c.id === dragState.id);
+            if (cowData) { cowData.x = newX; cowData.y = newY; }
+        }
+
+        function soltar(e) {
+            if (!dragState.isDragging) return;
+            document.removeEventListener('pointermove', arrastar);
+            document.removeEventListener('pointerup', soltar);
+            
+            dragState.element.style.zIndex = "1";
+            dragState.isDragging = false;
+            breederZone.classList.remove('active-drop');
+
+            let cowArrastada = gameState.cows.find(c => c.id === dragState.id);
+            if (!cowArrastada) return;
+
+            let bRect = breederZone.getBoundingClientRect();
+            if (e.clientX >= bRect.left && e.clientX <= bRect.right && 
+                e.clientY >= bRect.top && e.clientY <= bRect.bottom) {
+                tentarColocarNoCeleiro(cowArrastada);
+                return;
+            }
+
+            if (!dragState.hasMoved) {
+                gerarDinheiroClique(cowArrastada);
+                let emoji = dragState.element.querySelector('.emoji-wrapper');
+                emoji.animate([
+                    { transform: 'scale(1)' }, { transform: 'scale(1.3)' }, { transform: 'scale(1)' }
+                ], { duration: 150 });
+                return;
+            }
+
+            tentarMerge(cowArrastada);
+            dragState.element = null;
+            dragState.id = null;
+        }
+
+        // --- SISTEMA BREEDER (CELEIRO) ---
+        function tentarColocarNoCeleiro(cow) {
+            if (!gameState.breederUnlocked) {
+                criarParticula("Desbloqueie primeiro!", cow.x, cow.y, "#e74c3c");
+                return;
+            }
+
+            let b = gameState.breeder;
+            if (b.count >= 2) return;
+
+            if (b.count === 0 || b.level === cow.level) {
+                b.level = cow.level;
+                b.count++;
+                
+                document.getElementById('cow-' + cow.id).remove();
+                gameState.cows = gameState.cows.filter(c => c.id !== cow.id);
+
+                if (b.count === 2) {
+                    b.finishTime = Date.now() + CONFIG.tempoBreederMs;
+                }
+                
+                atualizarBreederUI();
+                atualizarUI();
+                salvarJogo();
+            } else {
+                criarParticula("Níveis diferentes!", cow.x, cow.y, "#e74c3c");
+            }
+        }
+
+        function loopBreeder() {
+            if (!gameState.breederUnlocked) return;
+            
+            let b = gameState.breeder;
+            if (b.count === 2 && b.finishTime) {
+                let restam = b.finishTime - Date.now();
+                if (restam <= 0) {
+                    b.count = 0;
+                    b.finishTime = null;
+                    
+                    for(let i=0; i<3; i++) {
+                        setTimeout(() => {
+                            let p = getPosicaoSegura();
+                            let nv = { id: Date.now()+i, level: b.level, x: p.x, y: p.y };
+                            gameState.cows.push(nv);
+                            criarElementoVaca(nv);
+                            criarParticula("✨ Clonada!", p.x, p.y, "#3498db");
+                            atualizarUI();
+                        }, i * 300);
+                    }
+                    b.level = null;
+                    atualizarBreederUI();
+                    salvarJogo();
+                } else {
+                    let pct = 100 - ((restam / CONFIG.tempoBreederMs) * 100);
+                    document.getElementById('breeder-bar').style.width = pct + '%';
+                }
+            }
+        }
+
+        function atualizarBreederUI() {
+            let b = gameState.breeder;
+            let s1 = document.getElementById('slot-1');
+            let s2 = document.getElementById('slot-2');
+            let prog = document.getElementById('breeder-progress');
+            let titulo = document.getElementById('breeder-title');
+            let lockScreen = document.getElementById('breeder-lock');
+
+            if (!gameState.breederUnlocked) {
+                lockScreen.style.display = 'flex';
+                return;
+            } else {
+                lockScreen.style.display = 'none';
+            }
+
+            s1.innerHTML = b.count >= 1 ? COW_STATS[b.level].emoji : '';
+            s2.innerHTML = b.count >= 2 ? COW_STATS[b.level].emoji : '';
+
+            if (b.count === 2) {
+                prog.style.display = 'block';
+                titulo.innerText = "Clonando... 🧬";
+            } else {
+                prog.style.display = 'none';
+                titulo.innerText = b.count === 1 ? "Falta 1 do mesmo nível!" : "Celeiro: Arraste 2 iguais";
+            }
+        }
+
+        function tentarMerge(cowArrastada) {
+            for (let outraCow of gameState.cows) {
+                if (outraCow.id === cowArrastada.id) continue;
+                if (outraCow.level === cowArrastada.level && COW_STATS[cowArrastada.level + 1]) {
+                    let d = Math.hypot(cowArrastada.x - outraCow.x, cowArrastada.y - outraCow.y);
+                    if (d < CONFIG.distanciaMerge) {
+                        document.getElementById('cow-' + cowArrastada.id).remove();
+                        document.getElementById('cow-' + outraCow.id).remove();
+                        gameState.cows = gameState.cows.filter(c => c.id !== cowArrastada.id && c.id !== outraCow.id);
+
+                        let vagaEvo = { id: Date.now(), level: cowArrastada.level + 1, x: outraCow.x, y: outraCow.y };
+                        gameState.cows.push(vagaEvo);
+                        criarElementoVaca(vagaEvo);
+                        criarParticula("⭐ Nível " + vagaEvo.level, outraCow.x, outraCow.y, '#fff');
+                        
+                        atualizarUI();
+                        salvarJogo();
+                        break;
+                    }
+                }
+            }
+        }
+
+        // --- UI & EFEITOS ---
+        function gerarDinheiroClique(cow) {
+            let ganho = COW_STATS[cow.level].clickValue;
+            gameState.money += ganho;
+            atualizarMoneyUI();
+            criarParticula("+" + formatarNumero(ganho), cow.x, cow.y - 25, '#FFC107');
+        }
+
+        function criarParticula(texto, x, y, cor) {
+            const part = document.createElement('div');
+            part.className = 'particle';
+            part.innerText = texto;
+            part.style.left = x + 'px';
+            part.style.top = y + 'px';
+            part.style.color = cor;
+            gameArea.appendChild(part);
+            setTimeout(() => part.remove(), 800);
+        }
+
+        function calcularGanhosPorSegundo() {
+            return gameState.cows.reduce((total, cow) => total + COW_STATS[cow.level].cps, 0);
+        }
+
+        function formatarNumero(num) {
+            if (num >= 1000000) return (num / 1000000).toFixed(2) + 'M';
+            if (num >= 1000) return (num / 1000).toFixed(1) + 'K';
+            return Math.floor(num).toString();
+        }
+
+        function atualizarMoneyUI() {
+            document.getElementById('money').innerText = formatarNumero(gameState.money);
+            document.getElementById('btn-buy').disabled = gameState.money < gameState.custoAtual;
+            
+            let btnUnlock = document.getElementById('btn-unlock-breeder');
+            if(btnUnlock && !gameState.breederUnlocked) {
+                btnUnlock.disabled = gameState.money < CONFIG.custoBreeder;
+            }
+        }
+
+        function atualizarUI() {
+            atualizarMoneyUI();
+            document.getElementById('custo-vaca').innerText = formatarNumero(gameState.custoAtual);
+            document.getElementById('gps').innerText = formatarNumero(calcularGanhosPorSegundo());
+        }
+
+        // --- SAVE SYSTEM ---
+        function salvarJogo() {
+            gameState.lastSaveTime = Date.now();
+            localStorage.setItem('cowEvoSave3', JSON.stringify(gameState)); // Mudou para 3 para resetar versão anterior sem breeder
+        }
+
+        function carregarJogo() {
+            const save = localStorage.getItem('cowEvoSave3');
+            if (save) {
+                try { 
+                    gameState = JSON.parse(save); 
+                    // Fallback para saves antigos que não tinham breederUnlocked
+                    if (gameState.breederUnlocked === undefined) {
+                        gameState.breederUnlocked = false;
+                    }
+                } catch (e) { console.error(e); }
+            }
+        }
+
+        function resetarSave() {
+            if(confirm("Tem certeza que quer resetar tudo? 😱")) {
+                localStorage.removeItem('cowEvoSave3');
+                location.reload();
+            }
+        }
+
+        window.onload = init;
+    </script>
+</body>
+</html>
+

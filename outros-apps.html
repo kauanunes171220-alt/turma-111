@@ -1,0 +1,173 @@
+<!DOCTYPE html>
+<html lang="pt-BR" data-theme="dark">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Transferidor | 111 Pro</title>
+    <style>
+        /* Reutilizando a Base Visual da 111 */
+        :root {
+            --primary-color: #3b82f6;
+            --bg-color: #f3f4f6;
+            --card-bg: #ffffff;
+            --text-main: #1f2937;
+            --text-muted: #6b7280;
+            --border-color: #e5e7eb;
+            --border-radius: 16px;
+        }
+
+        [data-theme="dark"] {
+            --primary-color: #60a5fa;
+            --bg-color: #0f172a;
+            --card-bg: #1e293b;
+            --text-main: #f8fafc;
+            --text-muted: #94a3b8;
+            --border-color: #334155;
+        }
+
+        * { box-sizing: border-box; margin: 0; padding: 0; font-family: 'Segoe UI', sans-serif; }
+        body { background-color: var(--bg-color); color: var(--text-main); padding: 20px; transition: 0.3s; }
+
+        .container { max-width: 800px; margin: 0 auto; display: flex; flex-direction: column; gap: 24px; }
+
+        header {
+            display: flex; justify-content: space-between; align-items: center;
+            padding: 24px; background-color: var(--card-bg); border: 1px solid var(--border-color);
+            border-radius: var(--border-radius); box-shadow: 0 4px 6px -1px rgba(0,0,0,0.1);
+        }
+
+        .header-btn {
+            background: var(--bg-color); border: 1px solid var(--border-color);
+            color: var(--text-main); padding: 10px 20px; border-radius: 9999px;
+            cursor: pointer; font-weight: 600; text-decoration: none; transition: 0.2s;
+        }
+
+        /* Menu de Categorias */
+        .nav-container {
+            background-color: var(--card-bg); padding: 16px;
+            border-radius: var(--border-radius); border: 1px solid var(--border-color);
+        }
+
+        .nav-menu { display: flex; gap: 12px; overflow-x: auto; scrollbar-width: none; padding-bottom: 5px; }
+        .nav-menu::-webkit-scrollbar { display: none; }
+
+        .nav-btn {
+            background-color: var(--bg-color); border: 1px solid var(--border-color);
+            padding: 10px 24px; border-radius: 9999px; cursor: pointer;
+            font-weight: 600; color: var(--text-main); white-space: nowrap; transition: 0.2s;
+        }
+
+        .nav-btn.active { background-color: var(--primary-color); color: white; border-color: var(--primary-color); }
+
+        /* Lista de Links */
+        .links-area {
+            background-color: var(--card-bg); padding: 24px;
+            border-radius: var(--border-radius); border: 1px solid var(--border-color);
+            min-height: 300px;
+        }
+
+        .link-card {
+            background-color: var(--bg-color);
+            padding: 18px; border-radius: 12px; margin-bottom: 12px;
+            display: flex; justify-content: space-between; align-items: center;
+            text-decoration: none; color: inherit; border: 1px solid var(--border-color);
+            transition: transform 0.2s;
+        }
+
+        .link-card:hover { transform: scale(1.02); border-color: var(--primary-color); }
+
+        .link-info h3 { color: var(--primary-color); font-size: 1.1rem; margin-bottom: 4px; }
+        .link-info p { color: var(--text-muted); font-size: 0.85rem; }
+
+        .go-icon { font-size: 1.2rem; opacity: 0.5; }
+
+        .footer-claim { text-align: center; font-size: 0.7rem; opacity: 0.4; margin-top: 30px; letter-spacing: 1px; }
+    </style>
+</head>
+<body>
+
+<div class="container">
+    <header>
+        <div>
+            <h1 style="color: var(--primary-color)">🚀 Transferidor</h1>
+            <p style="color: var(--text-muted)">Atalhos Rápidos da 111</p>
+        </div>
+        <a href="index.html" class="header-btn">🏠 Voltar</a>
+    </header>
+
+    <div class="nav-container">
+        <div class="nav-menu" id="category-menu">
+            </div>
+    </div>
+
+    <div class="links-area" id="links-list">
+        </div>
+
+    <footer class="footer-claim">© 2026 DESENVOLVIDO PELA 111.</footer>
+</div>
+
+<script>
+    // BASE DE DADOS EDITÁVEL
+    const linkDatabase = {
+      
+"Ferramentas": [
+{ 
+  nome: "Google Classroom",
+  desc: "Acesso às salas de aula",
+  url: "https://classroom.google.com" 
+},
+{
+  nome: "Khan Academy",
+  desc: "Praticar Matemática e Ciências",
+  url: "https://pt.khanacademy.org"
+}
+],
+
+"Jogos": [
+{ nome: "Apple colect",
+  desc: "diga sua maior pontuaçãono grupo 😉",
+  url: "apple colect.html" },
+{ nome: "Cow Evolution",
+  desc: "???",
+  url: "cow evolution.html" }
+        ]
+
+    };
+
+    const menu = document.getElementById('category-menu');
+    const list = document.getElementById('links-list');
+
+    function loadLinks(category, btn) {
+        // Estilo dos botões
+        document.querySelectorAll('.nav-btn').forEach(b => b.classList.remove('active'));
+        btn.classList.add('active');
+
+        list.innerHTML = '';
+        linkDatabase[category].forEach(item => {
+            const a = document.createElement('a');
+            a.className = 'link-card';
+            a.href = item.url;
+            a.target = "_blank";
+            a.innerHTML = `
+                <div class="link-info">
+                    <h3>${item.nome}</h3>
+                    <p>${item.desc}</p>
+                </div>
+                <div class="go-icon">➜</div>
+            `;
+            list.appendChild(a);
+        });
+    }
+
+    // Inicializar Menu
+    Object.keys(linkDatabase).forEach((cat, index) => {
+        const btn = document.createElement('button');
+        btn.className = 'nav-btn';
+        btn.textContent = cat;
+        btn.onclick = () => loadLinks(cat, btn);
+        menu.appendChild(btn);
+        if(index === 0) loadLinks(cat, btn); // Carrega a primeira categoria
+    });
+</script>
+</body>
+</html>
