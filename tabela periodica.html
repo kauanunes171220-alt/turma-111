@@ -1,0 +1,515 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Tabela Periódica Interativa Pro</title>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;800&display=swap" rel="stylesheet">
+    <style>
+        /* ==================== VARIÁVEIS E RESET ==================== */
+        :root {
+            --bg-color: #0f172a;
+            --surface-color: #1e293b;
+            --text-color: #f8fafc;
+            --text-muted: #94a3b8;
+            --ametal: #10b981;
+            --gas-nobre: #8b5cf6;
+            --alcalino: #ef4444;
+            --alcalino-terroso: #f59e0b;
+            --semimetal: #06b6d4;
+            --halogenio: #f43f5e;
+            --outro-metal: #3b82f6;
+            --metal-transicao: #eab308;
+            --lantanideo: #ec4899;
+            --actinideo: #d946ef;
+        }
+
+        * { box-sizing: border-box; margin: 0; padding: 0; font-family: 'Inter', sans-serif; }
+
+        body {
+            background-color: var(--bg-color);
+            color: var(--text-color);
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            padding: 1rem;
+            min-height: 100vh;
+        }
+
+        /* ==================== CABEÇALHO E PESQUISA ==================== */
+        header {
+            width: 100%;
+            max-width: 1200px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            margin-bottom: 2rem;
+            gap: 1.5rem;
+        }
+
+        h1 { 
+            font-size: 2.2rem; 
+            text-align: center; 
+            font-weight: 800;
+            background: linear-gradient(to right, #38bdf8, #818cf8);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+        }
+
+        .search-container {
+            width: 100%;
+            max-width: 500px;
+            position: relative;
+        }
+
+        .search-container input {
+            width: 100%;
+            padding: 14px 20px 14px 45px;
+            border-radius: 50px;
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            background: rgba(255, 255, 255, 0.05);
+            color: var(--text-color);
+            font-size: 1rem;
+            outline: none;
+            transition: all 0.3s ease;
+            backdrop-filter: blur(10px);
+        }
+
+        .search-container input:focus {
+            border-color: #38bdf8;
+            background: rgba(255, 255, 255, 0.1);
+            box-shadow: 0 0 15px rgba(56, 189, 248, 0.3);
+        }
+
+        .search-container::before {
+            content: "🔍";
+            position: absolute;
+            left: 18px;
+            top: 50%;
+            transform: translateY(-50%);
+            font-size: 1.1rem;
+            opacity: 0.7;
+        }
+
+        /* ==================== LEGENDA ==================== */
+        .legenda {
+            display: flex;
+            flex-wrap: wrap;
+            justify-content: center;
+            gap: 10px;
+            max-width: 1000px;
+            margin-bottom: 1rem;
+        }
+
+        .legenda-item {
+            display: flex;
+            align-items: center;
+            gap: 6px;
+            font-size: 0.75rem;
+            background: rgba(255, 255, 255, 0.05);
+            padding: 6px 12px;
+            border-radius: 20px;
+            cursor: pointer;
+            transition: all 0.2s;
+            border: 1px solid rgba(255, 255, 255, 0.05);
+        }
+
+        .legenda-item:hover { background: rgba(255, 255, 255, 0.1); }
+        .cor-box { width: 12px; height: 12px; border-radius: 50%; }
+
+        /* ==================== CONTAINER MOBILE FRIENDLY ==================== */
+        .tabela-container {
+            width: 100%;
+            max-width: 100vw;
+            overflow-x: auto;
+            -webkit-overflow-scrolling: touch;
+            padding-bottom: 20px;
+        }
+
+        .tabela-container::-webkit-scrollbar { height: 8px; }
+        .tabela-container::-webkit-scrollbar-track { background: rgba(255, 255, 255, 0.05); border-radius: 10px; margin: 0 20px; }
+        .tabela-container::-webkit-scrollbar-thumb { background: #475569; border-radius: 10px; }
+        .tabela-container::-webkit-scrollbar-thumb:hover { background: #64748b; }
+
+        /* ==================== GRID DA TABELA ==================== */
+        .tabela-periodica {
+            display: grid;
+            grid-template-columns: repeat(18, 65px);
+            grid-template-rows: repeat(10, 70px);
+            gap: 6px;
+            min-width: 1280px; 
+            margin: 0 auto;
+        }
+
+        .elemento {
+            position: relative;
+            background: rgba(255, 255, 255, 0.03);
+            border: 1px solid rgba(255, 255, 255, 0.08);
+            border-radius: 8px;
+            padding: 4px;
+            cursor: pointer;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+        }
+
+        /* Efeito de Pesquisa / Hover da Legenda */
+        .elemento.dimmed {
+            opacity: 0.15;
+            filter: grayscale(80%);
+            pointer-events: none;
+            transform: scale(0.95);
+        }
+
+        .elemento:hover {
+            transform: scale(1.15);
+            z-index: 10;
+            box-shadow: 0 10px 25px rgba(0, 0, 0, 0.6);
+            border-color: currentColor;
+            background: var(--surface-color);
+        }
+
+        .elemento .numero { font-size: 0.65rem; position: absolute; top: 4px; left: 6px; font-weight: 600; opacity: 0.7; }
+        .elemento .simbolo { font-size: 1.3rem; font-weight: 800; margin-top: 6px; }
+        .elemento .nome { font-size: 0.55rem; text-transform: uppercase; letter-spacing: 0.5px; text-align: center; margin-top: 2px; }
+
+        /* Cores Dinâmicas */
+        .ametal { color: var(--ametal); box-shadow: inset 0 0 10px rgba(16, 185, 129, 0.1); }
+        .gas-nobre { color: var(--gas-nobre); box-shadow: inset 0 0 10px rgba(139, 92, 246, 0.1); }
+        .alcalino { color: var(--alcalino); box-shadow: inset 0 0 10px rgba(239, 68, 68, 0.1); }
+        .alcalino-terroso { color: var(--alcalino-terroso); box-shadow: inset 0 0 10px rgba(245, 158, 11, 0.1); }
+        .semimetal { color: var(--semimetal); box-shadow: inset 0 0 10px rgba(6, 182, 212, 0.1); }
+        .halogenio { color: var(--halogenio); box-shadow: inset 0 0 10px rgba(244, 63, 94, 0.1); }
+        .outro-metal { color: var(--outro-metal); box-shadow: inset 0 0 10px rgba(59, 130, 246, 0.1); }
+        .metal-transicao { color: var(--metal-transicao); box-shadow: inset 0 0 10px rgba(234, 179, 8, 0.1); }
+        .lantanideo { color: var(--lantanideo); box-shadow: inset 0 0 10px rgba(236, 72, 153, 0.1); }
+        .actinideo { color: var(--actinideo); box-shadow: inset 0 0 10px rgba(217, 70, 239, 0.1); }
+
+        /* ==================== MODAL (JANELA DE DETALHES) ==================== */
+        .modal-overlay {
+            position: fixed; top: 0; left: 0; width: 100%; height: 100%;
+            background: rgba(15, 23, 42, 0.85);
+            backdrop-filter: blur(8px);
+            display: flex; align-items: center; justify-content: center;
+            opacity: 0; pointer-events: none; transition: all 0.3s ease; z-index: 100;
+            padding: 1rem;
+        }
+
+        .modal-overlay.ativo { opacity: 1; pointer-events: auto; }
+
+        .modal-content {
+            background: var(--surface-color); padding: 2.5rem 2rem; border-radius: 16px;
+            max-width: 420px; width: 100%; text-align: center;
+            transform: translateY(30px) scale(0.95); transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+            border: 1px solid rgba(255, 255, 255, 0.1); position: relative;
+            box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.5);
+        }
+
+        .modal-overlay.ativo .modal-content { transform: translateY(0) scale(1); }
+
+        .btn-fechar {
+            position: absolute; top: 15px; right: 20px; background: none; border: none;
+            color: var(--text-muted); font-size: 2rem; cursor: pointer; transition: color 0.2s;
+            line-height: 1;
+        }
+        .btn-fechar:hover { color: white; }
+        
+        #modal-simbolo { font-size: 4rem; margin: 0; font-weight: 800; text-shadow: 0 0 20px currentColor; }
+        #modal-nome { font-size: 1.8rem; margin-bottom: 0.2rem; font-weight: 600; }
+        #modal-categoria { font-size: 0.85rem; text-transform: uppercase; letter-spacing: 1.5px; margin-bottom: 1.5rem; opacity: 0.9; font-weight: 600; }
+        
+        .info-grid { 
+            display: grid; grid-template-columns: 1fr 1fr; gap: 12px; 
+            text-align: left; background: rgba(0,0,0,0.4); padding: 20px; border-radius: 12px;
+            font-size: 0.95rem; border: 1px solid rgba(255,255,255,0.05);
+        }
+        .info-grid strong { color: var(--text-muted); display: block; margin-bottom: 4px; font-size: 0.8rem; text-transform: uppercase; letter-spacing: 0.5px; }
+        .info-full { grid-column: 1 / -1; margin-top: 5px; padding-top: 10px; border-top: 1px solid rgba(255,255,255,0.1); }
+        
+        .instrucao-mobile { display: none; margin-bottom: 1rem; color: var(--text-muted); font-size: 0.9rem; }
+
+        @media (max-width: 768px) {
+            .instrucao-mobile { display: block; }
+            h1 { font-size: 1.5rem; }
+            .legenda { display: none; /* Oculta no celular para economizar espaço */ }
+        }
+    </style>
+</head>
+<body>
+
+    <header>
+        <h1>Tabela Periódica</h1>
+        <div class="search-container">
+            <input type="text" id="search-input" placeholder="Pesquise por nome, símbolo, número ou massa...">
+        </div>
+        <div class="legenda" id="legenda-container"></div>
+        <p class="instrucao-mobile">👉 Deslize para explorar a tabela completa</p>
+    </header>
+
+    <div class="tabela-container">
+        <main class="tabela-periodica" id="tabela-grid"></main>
+    </div>
+
+    <div id="modal" class="modal-overlay">
+        <div class="modal-content">
+            <button class="btn-fechar" onclick="fecharModal()">×</button>
+            <div id="modal-simbolo"></div>
+            <h2 id="modal-nome"></h2>
+            <div id="modal-categoria"></div>
+            <div class="info-grid">
+                <div><strong>Nº Atômico</strong> <span id="modal-numero"></span></div>
+                <div><strong>Massa Atômica</strong> <span id="modal-massa"></span></div>
+                <div class="info-full"><strong>Curiosidade / Uso</strong> <span id="modal-uso"></span></div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // Categorias e Banco de Dados
+        const categorias = {
+            1: { id: 'ametal', nome: 'Ametal' },
+            2: { id: 'gas-nobre', nome: 'Gás Nobre' },
+            3: { id: 'alcalino', nome: 'Metal Alcalino' },
+            4: { id: 'alcalino-terroso', nome: 'Alcalino-Terroso' },
+            5: { id: 'semimetal', nome: 'Semimetal' },
+            6: { id: 'halogenio', nome: 'Halogênio' },
+            7: { id: 'outro-metal', nome: 'Outro Metal' },
+            8: { id: 'metal-transicao', nome: 'Metal de Transição' },
+            9: { id: 'lantanideo', nome: 'Lantanídeo' },
+            10: { id: 'actinideo', nome: 'Actinídeo' }
+        };
+
+        const elementosBase = [
+            [1, 'H', 'Hidrogênio', '1.008', 1, 1, 1, 'Combustível de foguetes e estrelas.'],
+            [2, 'He', 'Hélio', '4.002', 2, 18, 1, 'Balões festivos e lasers.'],
+            [3, 'Li', 'Lítio', '6.94', 3, 1, 2, 'Baterias de celulares e carros.'],
+            [4, 'Be', 'Berílio', '9.012', 4, 2, 2, 'Equipamentos aeroespaciais.'],
+            [5, 'B', 'Boro', '10.81', 5, 13, 2, 'Vidros resistentes ao calor.'],
+            [6, 'C', 'Carbono', '12.011', 1, 14, 2, 'Base da vida, grafite e diamantes.'],
+            [7, 'N', 'Nitrogênio', '14.007', 1, 15, 2, 'Fertilizantes, compõe 78% do ar.'],
+            [8, 'O', 'Oxigênio', '15.999', 1, 16, 2, 'Respiração e combustão.'],
+            [9, 'F', 'Flúor', '18.998', 6, 17, 2, 'Creme dental e teflon.'],
+            [10, 'Ne', 'Neônio', '20.180', 2, 18, 2, 'Luminosos e placas de neon.'],
+            [11, 'Na', 'Sódio', '22.990', 3, 1, 3, 'Sal de cozinha (NaCl).'],
+            [12, 'Mg', 'Magnésio', '24.305', 4, 2, 3, 'Ligas metálicas e clorofila.'],
+            [13, 'Al', 'Alumínio', '26.982', 7, 13, 3, 'Latinhas, aviões e janelas.'],
+            [14, 'Si', 'Silício', '28.085', 5, 14, 3, 'Chips de computador e vidro.'],
+            [15, 'P', 'Fósforo', '30.974', 1, 15, 3, 'Palitos de fósforo e DNA.'],
+            [16, 'S', 'Enxofre', '32.06', 1, 16, 3, 'Pólvora e pneus.'],
+            [17, 'Cl', 'Cloro', '35.45', 6, 17, 3, 'Purificação de água.'],
+            [18, 'Ar', 'Argônio', '39.95', 2, 18, 3, 'Lâmpadas incandescentes.'],
+            [19, 'K', 'Potássio', '39.098', 3, 1, 4, 'Fertilizantes e bananas.'],
+            [20, 'Ca', 'Cálcio', '40.078', 4, 2, 4, 'Ossos, dentes e cimento.'],
+            [21, 'Sc', 'Escândio', '44.956', 8, 3, 4, 'Quadros de bicicletas leves.'],
+            [22, 'Ti', 'Titânio', '47.867', 8, 4, 4, 'Implantes e submarinos.'],
+            [23, 'V', 'Vanádio', '50.942', 8, 5, 4, 'Ferramentas de aço.'],
+            [24, 'Cr', 'Cromo', '51.996', 8, 6, 4, 'Aço inoxidável.'],
+            [25, 'Mn', 'Manganês', '54.938', 8, 7, 4, 'Pilhas comuns e cofres.'],
+            [26, 'Fe', 'Ferro', '55.845', 8, 8, 4, 'Estruturas, carros e sangue.'],
+            [27, 'Co', 'Cobalto', '58.933', 8, 9, 4, 'Ímãs fortes e vitaminas.'],
+            [28, 'Ni', 'Níquel', '58.693', 8, 10, 4, 'Moedas e baterias.'],
+            [29, 'Cu', 'Cobre', '63.546', 8, 11, 4, 'Fios elétricos e moedas.'],
+            [30, 'Zn', 'Zinco', '65.38', 8, 12, 4, 'Proteção contra ferrugem.'],
+            [31, 'Ga', 'Gálio', '69.723', 7, 13, 4, 'LEDs e derrete na mão.'],
+            [32, 'Ge', 'Germânio', '72.630', 5, 14, 4, 'Fibras ópticas.'],
+            [33, 'As', 'Arsênio', '74.922', 5, 15, 4, 'Venenos e lasers.'],
+            [34, 'Se', 'Selênio', '78.971', 1, 16, 4, 'Fotocopiadoras e xampus.'],
+            [35, 'Br', 'Bromo', '79.904', 6, 17, 4, 'Retardantes de chama.'],
+            [36, 'Kr', 'Criptônio', '83.798', 2, 18, 4, 'Lanternas e flashes fotográficos.'],
+            [37, 'Rb', 'Rubídio', '85.468', 3, 1, 5, 'Relógios atômicos.'],
+            [38, 'Sr', 'Estrôncio', '87.62', 4, 2, 5, 'Fogos de artifício vermelhos.'],
+            [39, 'Y', 'Ítrio', '88.906', 8, 3, 5, 'Telas de TV e LEDs.'],
+            [40, 'Zr', 'Zircônio', '91.224', 8, 4, 5, 'Reatores nucleares e joias.'],
+            [41, 'Nb', 'Nióbio', '92.906', 8, 5, 5, 'Ímãs supercondutores.'],
+            [42, 'Mo', 'Molibdênio', '95.95', 8, 6, 5, 'Motores de aviões.'],
+            [43, 'Tc', 'Tecnécio', '98', 8, 7, 5, 'Exames médicos por imagem.'],
+            [44, 'Ru', 'Rutênio', '101.07', 8, 8, 5, 'Contatos elétricos.'],
+            [45, 'Rh', 'Ródio', '102.91', 8, 9, 5, 'Catalisadores de carros.'],
+            [46, 'Pd', 'Paládio', '106.42', 8, 10, 5, 'Purificação de hidrogênio.'],
+            [47, 'Ag', 'Prata', '107.87', 8, 11, 5, 'Joias e painéis solares.'],
+            [48, 'Cd', 'Cádmio', '112.41', 8, 12, 5, 'Baterias recarregáveis antigas.'],
+            [49, 'In', 'Índio', '114.82', 7, 13, 5, 'Telas sensíveis ao toque.'],
+            [50, 'Sn', 'Estanho', '118.71', 7, 14, 5, 'Soldas e latas de aço.'],
+            [51, 'Sb', 'Antimônio', '121.76', 5, 15, 5, 'Baterias de chumbo-ácido.'],
+            [52, 'Te', 'Telúrio', '127.60', 5, 16, 5, 'Painéis solares e CDs.'],
+            [53, 'I', 'Iodo', '126.90', 6, 17, 5, 'Desinfetantes e tireoide.'],
+            [54, 'Xe', 'Xenônio', '131.29', 2, 18, 5, 'Faróis de carros e projetores.'],
+            [55, 'Cs', 'Césio', '132.91', 3, 1, 6, 'Relógios atômicos mais precisos.'],
+            [56, 'Ba', 'Bário', '137.33', 4, 2, 6, 'Exames de raio-X gastrointestinais.'],
+            [72, 'Hf', 'Háfnio', '178.49', 8, 4, 6, 'Submarinos nucleares.'],
+            [73, 'Ta', 'Tântalo', '180.95', 8, 5, 6, 'Celulares e implantes.'],
+            [74, 'W', 'Tungstênio', '183.84', 8, 6, 6, 'Filamentos de lâmpadas antigas.'],
+            [75, 'Re', 'Rênio', '186.21', 8, 7, 6, 'Motores a jato.'],
+            [76, 'Os', 'Ósmio', '190.23', 8, 8, 6, 'Pontas de canetas-tinteiro.'],
+            [77, 'Ir', 'Irídio', '192.22', 8, 9, 6, 'Velas de ignição e satélites.'],
+            [78, 'Pt', 'Platina', '195.08', 8, 10, 6, 'Joias e catalisadores.'],
+            [79, 'Au', 'Ouro', '196.97', 8, 11, 6, 'Joias e conectores eletrônicos.'],
+            [80, 'Hg', 'Mercúrio', '200.59', 8, 12, 6, 'Termômetros antigos e lâmpadas.'],
+            [81, 'Tl', 'Tálio', '204.38', 7, 13, 6, 'Equipamentos ópticos.'],
+            [82, 'Pb', 'Chumbo', '207.2', 7, 14, 6, 'Baterias de carros e proteção de raios-X.'],
+            [83, 'Bi', 'Bismuto', '208.98', 7, 15, 6, 'Remédios estomacais e cosméticos.'],
+            [84, 'Po', 'Polônio', '209', 5, 16, 6, 'Fontes de calor para satélites.'],
+            [85, 'At', 'Astato', '210', 6, 17, 6, 'Tratamentos experimentais de câncer.'],
+            [86, 'Rn', 'Radônio', '222', 2, 18, 6, 'Gás natural radioativo do solo.'],
+            [87, 'Fr', 'Frâncio', '223', 3, 1, 7, 'Pesquisa científica (altamente radioativo).'],
+            [88, 'Ra', 'Rádio', '226', 4, 2, 7, 'Antigos relógios luminosos.'],
+            [104, 'Rf', 'Rutherfórdio', '267', 8, 4, 7, 'Elemento sintético (pesquisa).'],
+            [105, 'Db', 'Dúbnio', '268', 8, 5, 7, 'Elemento sintético (pesquisa).'],
+            [106, 'Sg', 'Seabórgio', '269', 8, 6, 7, 'Elemento sintético (pesquisa).'],
+            [107, 'Bh', 'Bóhrio', '270', 8, 7, 7, 'Elemento sintético (pesquisa).'],
+            [108, 'Hs', 'Hássio', '277', 8, 8, 7, 'Elemento sintético (pesquisa).'],
+            [109, 'Mt', 'Meitnério', '278', 8, 9, 7, 'Elemento sintético (pesquisa).'],
+            [110, 'Ds', 'Darmstádtio', '281', 8, 10, 7, 'Elemento sintético (pesquisa).'],
+            [111, 'Rg', 'Roentgênio', '282', 8, 11, 7, 'Elemento sintético (pesquisa).'],
+            [112, 'Cn', 'Copernício', '285', 8, 12, 7, 'Elemento sintético (pesquisa).'],
+            [113, 'Nh', 'Nihônio', '286', 7, 13, 7, 'Elemento sintético (pesquisa).'],
+            [114, 'Fl', 'Fleróvio', '289', 7, 14, 7, 'Elemento sintético (pesquisa).'],
+            [115, 'Mc', 'Moscóvio', '290', 7, 15, 7, 'Elemento sintético (pesquisa).'],
+            [116, 'Lv', 'Livermório', '293', 7, 16, 7, 'Elemento sintético (pesquisa).'],
+            [117, 'Ts', 'Tenessino', '294', 6, 17, 7, 'Elemento sintético (pesquisa).'],
+            [118, 'Og', 'Oganessônio', '294', 2, 18, 7, 'Elemento sintético (pesquisa).']
+        ];
+
+        const lantanideos = [
+            [57, 'La', 'Lantânio', '138.91', 9, 4, 9, 'Lentes de telescópios.'],
+            [58, 'Ce', 'Cério', '140.12', 9, 5, 9, 'Pedras de isqueiro.'],
+            [59, 'Pr', 'Praseodímio', '140.91', 9, 6, 9, 'Óculos de soldador.'],
+            [60, 'Nd', 'Neodímio', '144.24', 9, 7, 9, 'Ímãs fortíssimos e motores.'],
+            [61, 'Pm', 'Promécio', '145', 9, 8, 9, 'Baterias nucleares.'],
+            [62, 'Sm', 'Samário', '150.36', 9, 9, 9, 'Ímãs para fones de ouvido.'],
+            [63, 'Eu', 'Európio', '151.96', 9, 10, 9, 'Tintas fluorescentes e TVs.'],
+            [64, 'Gd', 'Gadolínio', '157.25', 9, 11, 9, 'Contraste para ressonância magnética.'],
+            [65, 'Tb', 'Térbio', '158.93', 9, 12, 9, 'Lâmpadas fluorescentes.'],
+            [66, 'Dy', 'Disprósio', '162.50', 9, 13, 9, 'Discos rígidos.'],
+            [67, 'Ho', 'Hólmio', '164.93', 9, 14, 9, 'Lasers cirúrgicos.'],
+            [68, 'Er', 'Érbio', '167.26', 9, 15, 9, 'Fibras ópticas.'],
+            [69, 'Tm', 'Túlio', '168.93', 9, 16, 9, 'Equipamentos de raio-X portáteis.'],
+            [70, 'Yb', 'Itérbio', '173.05', 9, 17, 9, 'Lasers e relógios atômicos.'],
+            [71, 'Lu', 'Lutécio', '174.97', 9, 18, 9, 'Tratamento de câncer.']
+        ];
+
+        const actinideos = [
+            [89, 'Ac', 'Actínio', '227', 10, 4, 10, 'Terapia de radiação.'],
+            [90, 'Th', 'Tório', '232.04', 10, 5, 10, 'Lentes de câmeras de alta qualidade.'],
+            [91, 'Pa', 'Protactínio', '231.04', 10, 6, 10, 'Pesquisa científica.'],
+            [92, 'U', 'Urânio', '238.03', 10, 7, 10, 'Combustível nuclear.'],
+            [93, 'Np', 'Netúnio', '237', 10, 8, 10, 'Detectores de nêutrons.'],
+            [94, 'Pu', 'Plutônio', '244', 10, 9, 10, 'Bombas nucleares e satélites.'],
+            [95, 'Am', 'Amerício', '243', 10, 10, 10, 'Detectores de fumaça.'],
+            [96, 'Cm', 'Cúrio', '247', 10, 11, 10, 'Geradores em sondas espaciais.'],
+            [97, 'Bk', 'Berquélio', '247', 10, 12, 10, 'Pesquisa científica.'],
+            [98, 'Cf', 'Califórnio', '251', 10, 13, 10, 'Detectores de metal e petróleo.'],
+            [99, 'Es', 'Einstênio', '252', 10, 14, 10, 'Pesquisa científica.'],
+            [100, 'Fm', 'Férmio', '257', 10, 15, 10, 'Pesquisa científica.'],
+            [101, 'Md', 'Mendelévio', '258', 10, 16, 10, 'Pesquisa científica.'],
+            [102, 'No', 'Nobélio', '259', 10, 17, 10, 'Pesquisa científica.'],
+            [103, 'Lr', 'Laurêncio', '266', 10, 18, 10, 'Pesquisa científica.']
+        ];
+
+        const todosElementos = [...elementosBase, ...lantanideos, ...actinideos];
+        const gridTabela = document.getElementById('tabela-grid');
+        const legendaContainer = document.getElementById('legenda-container');
+
+        // Construir a Legenda Dinamicamente
+        Object.values(categorias).forEach(cat => {
+            const item = document.createElement('div');
+            item.className = 'legenda-item';
+            
+            const corBox = document.createElement('span');
+            corBox.className = 'cor-box';
+            corBox.style.backgroundColor = `var(--${cat.id})`;
+            
+            item.appendChild(corBox);
+            item.appendChild(document.createTextNode(cat.nome));
+            
+            // Highlight na categoria ao passar o mouse na legenda (QoL)
+            item.addEventListener('mouseenter', () => {
+                document.querySelectorAll('.elemento').forEach(el => el.classList.add('dimmed'));
+                document.querySelectorAll(`.${cat.id}`).forEach(el => el.classList.remove('dimmed'));
+            });
+            item.addEventListener('mouseleave', () => {
+                document.querySelectorAll('.elemento').forEach(el => el.classList.remove('dimmed'));
+                // Retrigger a pesquisa se houver algo digitado
+                document.getElementById('search-input').dispatchEvent(new Event('input'));
+            });
+
+            legendaContainer.appendChild(item);
+        });
+
+        // Construir a Tabela
+        todosElementos.forEach(dado => {
+            const [num, sim, nom, mas, catId, col, lin, uso] = dado;
+            const categoria = categorias[catId];
+
+            const div = document.createElement('div');
+            div.className = `elemento ${categoria.id}`;
+            div.style.gridColumn = col;
+            div.style.gridRow = lin;
+            
+            // Salvando os dados no DOM para pesquisa rápida
+            div.dataset.nome = nom.toLowerCase();
+            div.dataset.simbolo = sim.toLowerCase();
+            div.dataset.numero = num;
+            div.dataset.massa = mas;
+
+            div.innerHTML = `
+                <span class="numero">${num}</span>
+                <span class="simbolo">${sim}</span>
+                <span class="nome">${nom}</span>
+            `;
+
+            div.addEventListener('click', () => {
+                const corElemento = window.getComputedStyle(div).color;
+
+                document.getElementById('modal-nome').innerText = nom;
+                document.getElementById('modal-simbolo').innerText = sim;
+                document.getElementById('modal-simbolo').style.color = corElemento;
+                document.getElementById('modal-numero').innerText = num;
+                document.getElementById('modal-massa').innerText = mas;
+                document.getElementById('modal-categoria').innerText = categoria.nome;
+                document.getElementById('modal-categoria').style.color = corElemento;
+                document.getElementById('modal-uso').innerText = uso;
+
+                document.getElementById('modal').classList.add('ativo');
+            });
+
+            gridTabela.appendChild(div);
+        });
+
+        // Lógica de Pesquisa
+        const searchInput = document.getElementById('search-input');
+        searchInput.addEventListener('input', (e) => {
+            const term = e.target.value.toLowerCase().trim();
+            const elementosCards = document.querySelectorAll('.elemento');
+
+            elementosCards.forEach(el => {
+                const pNome = el.dataset.nome;
+                const pSimbolo = el.dataset.simbolo;
+                const pNumero = el.dataset.numero;
+                const pMassa = el.dataset.massa;
+
+                if (term === '') {
+                    el.classList.remove('dimmed');
+                } else if (pNome.includes(term) || pSimbolo.includes(term) || pNumero.includes(term) || pMassa.includes(term)) {
+                    el.classList.remove('dimmed');
+                } else {
+                    el.classList.add('dimmed');
+                }
+            });
+        });
+
+        // Modal Close
+        const modal = document.getElementById('modal');
+        function fecharModal() { modal.classList.remove('ativo'); }
+        modal.addEventListener('click', (e) => { if(e.target === modal) fecharModal(); });
+        
+        // Fechar modal no botão ESC
+        document.addEventListener('keydown', (e) => {
+            if(e.key === "Escape") fecharModal();
+        });
+    </script>
+</body>
+</html>
+
