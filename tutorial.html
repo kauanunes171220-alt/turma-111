@@ -1,0 +1,264 @@
+<!DOCTYPE html>
+<html lang="pt-BR" data-theme="dark">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Tutorial | Painel Modular</title>
+    <style>
+        :root {
+            --primary-color: #3b82f6;
+            --bg-color: #f3f4f6;
+            --card-bg: #ffffff;
+            --text-main: #1f2937;
+            --text-muted: #6b7280;
+            --border-color: #e5e7eb;
+            --border-radius: 16px;
+            --shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.05), 0 4px 6px -2px rgba(0, 0, 0, 0.025);
+            
+            /* Cores de destaque para o tutorial */
+            --accent-green: #10b981;
+            --accent-purple: #8b5cf6;
+            --accent-orange: #f59e0b;
+        }
+
+        [data-theme="dark"] {
+            --primary-color: #60a5fa;
+            --bg-color: #0f172a;
+            --card-bg: #1e293b;
+            --text-main: #f8fafc;
+            --text-muted: #94a3b8;
+            --border-color: #334155;
+            --shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.2);
+            
+            --accent-green: #34d399;
+            --accent-purple: #a78bfa;
+            --accent-orange: #fbbf24;
+        }
+
+        * { box-sizing: border-box; margin: 0; padding: 0; font-family: 'Inter', 'Segoe UI', system-ui, sans-serif; }
+
+        body { 
+            background-color: var(--bg-color); 
+            color: var(--text-main); 
+            line-height: 1.6;
+            display: flex;
+            justify-content: center;
+            padding: 40px 20px;
+            transition: background-color 0.3s, color 0.3s;
+        }
+
+        .tutorial-container {
+            max-width: 700px;
+            width: 100%;
+        }
+
+        header {
+            text-align: center;
+            margin-bottom: 40px;
+        }
+
+        header h1 {
+            font-size: 2.2rem;
+            color: var(--primary-color);
+            margin-bottom: 10px;
+            letter-spacing: -0.5px;
+        }
+
+        header p {
+            color: var(--text-muted);
+            font-size: 1.1rem;
+        }
+
+        .step-card {
+            background-color: var(--card-bg);
+            border-radius: var(--border-radius);
+            padding: 24px 30px;
+            margin-bottom: 24px;
+            box-shadow: var(--shadow);
+            border: 1px solid var(--border-color);
+            border-left: 6px solid var(--primary-color);
+            transition: transform 0.2s;
+        }
+
+        .step-card:hover {
+            transform: translateY(-2px);
+        }
+
+        .step-card.green { border-left-color: var(--accent-green); }
+        .step-card.purple { border-left-color: var(--accent-purple); }
+        .step-card.orange { border-left-color: var(--accent-orange); }
+
+        .step-header {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            margin-bottom: 12px;
+        }
+
+        .icon-box {
+            width: 40px;
+            height: 40px;
+            border-radius: 10px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 1.2rem;
+            background-color: var(--bg-color);
+        }
+
+        .step-card h2 {
+            font-size: 1.3rem;
+            color: var(--text-main);
+        }
+
+        .step-card p {
+            color: var(--text-muted);
+            font-size: 0.95rem;
+        }
+
+        .highlight {
+            background-color: var(--bg-color);
+            padding: 2px 6px;
+            border-radius: 4px;
+            color: var(--primary-color);
+            font-weight: 600;
+            font-size: 0.9rem;
+            border: 1px solid var(--border-color);
+        }
+
+        .back-btn {
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+            background-color: var(--primary-color);
+            color: white;
+            text-decoration: none;
+            padding: 12px 24px;
+            border-radius: 30px;
+            font-weight: 600;
+            margin-top: 20px;
+            transition: opacity 0.2s;
+        }
+
+        .back-btn:hover {
+            opacity: 0.9;
+        }
+
+        /* Simples controle de tema para o tutorial */
+        .theme-switch {
+            position: absolute;
+            top: 20px;
+            right: 20px;
+            background: var(--card-bg);
+            border: 1px solid var(--border-color);
+            color: var(--text-main);
+            padding: 8px 16px;
+            border-radius: 20px;
+            cursor: pointer;
+            font-weight: 500;
+        }
+    </style>
+</head>
+<body>
+
+    <button class="theme-switch" id="theme-toggle">☀️ Light</button>
+
+    <div class="tutorial-container">
+        <header>
+            <h1>Bem-vindo ao seu Painel 👋</h1>
+            <p>Aprenda a organizar seu espaço em poucos passos de forma simples e fluida.</p>
+        </header>
+
+<div class="step-card" style="border-left-color: #f472b6;">
+    <div class="step-header">
+        <div class="icon-box" style="color: #f472b6;">🏫</div>
+        <h2>O Fluxo Ideal de Uso</h2>
+    </div>
+    <p>Para nunca mais esquecer um trabalho ou prova, siga este método:</p>
+    <ol style="margin-top: 10px; padding-left: 20px; font-size: 0.9rem; color: var(--text-muted);">
+        <li><b>Anotação Rápida:</b> No meio da aula, anote o nome do trabalho no seu caderno ou celular.</li>
+        <li><b>Transferência:</b> Ao chegar em casa, passe para o <span class="highlight">Modu</span> criando um novo grupo.</li>
+        <li><b>Detalhamento:</b> Adicione o bloco de <b>Data</b> para ativar o alerta e o de <b>Tópicos</b> para listar o que precisa ser feito.</li>
+    </ol>
+</div>
+
+        <div class="step-card">
+            <div class="step-header">
+                <div class="icon-box" style="color: var(--primary-color);">✏️</div>
+                <h2>1. O Modo de Edição</h2>
+            </div>
+            <p>O seu painel possui dois modos: Visualização e Edição. Clique no botão azul <span class="highlight">✏️ Editar Modelo</span> no topo da página para começar a adicionar, mover ou excluir seus blocos e categorias.</p>
+        </div>
+
+        <div class="step-card green">
+            <div class="step-header">
+                <div class="icon-box" style="color: var(--accent-green);">📅</div>
+                <h2>2. Datas Inteligentes</h2>
+            </div>
+            <p>Ao adicionar um bloco de "Data", basta digitar os números. O painel colocará a barra <span class="highlight">/</span> automaticamente para você. Se a data estiver próxima (amanhã ou hoje), um aviso vermelho aparecerá no topo do seu painel!</p>
+        </div>
+
+        <div class="step-card purple">
+            <div class="step-header">
+                <div class="icon-box" style="color: var(--accent-purple);">✨</div>
+                <h2>3. Tópicos e Imagens Automáticos</h2>
+            </div>
+            <p>Nos blocos de "Tópicos" ou "Imagens", você não precisa se preocupar com a formatação. Basta digitar e apertar <span class="highlight">Enter</span> no teclado. O sistema criará a quebra de linha com um traço automaticamente, mantendo tudo alinhado.</p>
+        </div>
+
+        <div class="step-card orange">
+            <div class="step-header">
+                <div class="icon-box" style="color: var(--accent-orange);">🗂️</div>
+                <h2>4. Organize como Quiser</h2>
+            </div>
+            <p>Durante o modo de edição, use os botões de <span class="highlight">⬆️</span> e <span class="highlight">⬇️</span> para reordenar a prioridade dos blocos dentro de um grupo. Você tem liberdade total para montar a estrutura que fizer mais sentido para a sua rotina.</p>
+        </div>
+
+<div class="step-card" style="border-left-color: #22d3ee;">
+    <div class="step-header">
+        <div class="icon-box" style="color: #22d3ee;">🖼️</div>
+        <h2>Como adicionar suas imagens</h2>
+    </div>
+    <p>Para exibir fotos ou prints no <b>Modu</b>, você precisa transformar o arquivo em um link usando o nosso fluxo oficial:</p>
+    
+    <div style="margin-top: 15px; display: flex; flex-direction: column; gap: 12px;">
+        <div style="display: flex; align-items: flex-start; gap: 10px;">
+            <span style="background: #22d3ee; color: white; border-radius: 50%; width: 20px; height: 20px; display: flex; align-items: center; justify-content: center; font-size: 0.7rem; flex-shrink: 0; margin-top: 3px;">1</span>
+            <p style="font-size: 0.9rem; color: var(--text-muted);">Abra o seu <b>Transferidor de Apps</b> e selecione o <b>Catbox</b>.</p>
+        </div>
+        
+        <div style="display: flex; align-items: flex-start; gap: 10px;">
+            <span style="background: #22d3ee; color: white; border-radius: 50%; width: 20px; height: 20px; display: flex; align-items: center; justify-content: center; font-size: 0.7rem; flex-shrink: 0; margin-top: 3px;">2</span>
+            <p style="font-size: 0.9rem; color: var(--text-muted);">Clique em <span class="highlight">Select or drop files</span> e escolha a imagem na sua galeria.</p>
+        </div>
+
+        <div style="display: flex; align-items: flex-start; gap: 10px;">
+            <span style="background: #22d3ee; color: white; border-radius: 50%; width: 20px; height: 20px; display: flex; align-items: center; justify-content: center; font-size: 0.7rem; flex-shrink: 0; margin-top: 3px;">3</span>
+            <p style="font-size: 0.9rem; color: var(--text-muted);">Aguarde o upload e <b>copie o link gerado</b>.</p>
+        </div>
+
+        <div style="display: flex; align-items: flex-start; gap: 10px;">
+            <span style="background: #22d3ee; color: white; border-radius: 50%; width: 20px; height: 20px; display: flex; align-items: center; justify-content: center; font-size: 0.7rem; flex-shrink: 0; margin-top: 3px;">4</span>
+            <p style="font-size: 0.9rem; color: var(--text-muted);">No <b>Modu</b>, entre no modo edição e cole o link no campo de <b>Imagem</b>.</p>
+        </div>
+    </div>
+</div>
+
+        <div style="text-align: center;">
+            <a href="modu.html" class="back-btn">⬅️ Voltar para o Meu Painel</a>
+        </div>
+    </div>
+
+    <script>
+        // Sincroniza o tema do tutorial com o que estiver salvo no LocalStorage (opcional) ou permite alternar aqui
+        const themeToggle = document.getElementById('theme-toggle');
+        const htmlElement = document.documentElement;
+        
+        themeToggle.addEventListener('click', () => {
+            const target = htmlElement.getAttribute('data-theme') === 'dark' ? 'light' : 'dark';
+            htmlElement.setAttribute('data-theme', target);
+            themeToggle.textContent = target === 'dark' ? '☀️ Light' : '🌙 Dark';
+        });
+    </script>
+</body>
+</html>

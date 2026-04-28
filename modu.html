@@ -1,0 +1,472 @@
+<!DOCTYPE html>
+<html lang="pt-BR" data-theme="dark">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Painel Modular | Profissional</title>
+    <style>
+        :root {
+            --primary-color: #3b82f6;
+            --primary-hover: #2563eb;
+            --bg-color: #f3f4f6;
+            --card-bg: #ffffff;
+            --block-bg: #f9fafb;
+            --text-main: #1f2937;
+            --text-muted: #6b7280;
+            --border-color: #e5e7eb;
+            --border-radius: 12px;
+            --status-urgent-bg: #fee2e2;
+            --status-urgent-text: #dc2626;
+            --shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
+        }
+
+        [data-theme="dark"] {
+            --primary-color: #60a5fa;
+            --bg-color: #0f172a;
+            --card-bg: #1e293b;
+            --block-bg: #334155;
+            --text-main: #f8fafc;
+            --text-muted: #94a3b8;
+            --border-color: #334155;
+            --status-urgent-bg: #7f1d1d;
+            --status-urgent-text: #fca5a5;
+            --shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.3);
+        }
+
+        * { box-sizing: border-box; margin: 0; padding: 0; font-family: 'Inter', 'Segoe UI', system-ui, sans-serif; }
+
+        body { background-color: var(--bg-color); color: var(--text-main); padding: 20px; transition: background-color 0.3s, color 0.3s; padding-bottom: 80px; }
+
+        header {
+            display: flex; justify-content: space-between; align-items: center;
+            margin-bottom: 24px; padding: 20px 24px; background-color: var(--card-bg);
+            border: 1px solid var(--border-color); border-radius: var(--border-radius);
+            box-shadow: var(--shadow); flex-wrap: wrap; gap: 15px;
+        }
+
+        .header-titles h1 { color: var(--primary-color); font-size: 1.5rem; letter-spacing: -0.5px; }
+        .header-titles p { color: var(--text-muted); font-size: 0.9rem; margin-top: 4px; }
+        
+        .header-actions { display: flex; gap: 12px; flex-wrap: wrap; align-items: center; }
+        .btn {
+            background: var(--bg-color); border: 1px solid var(--border-color);
+            color: var(--text-main); padding: 8px 16px; border-radius: 8px;
+            cursor: pointer; font-weight: 500; transition: all 0.2s; font-size: 0.9rem;
+            display: inline-flex; align-items: center; justify-content: center; gap: 6px;
+        }
+        .btn:hover { border-color: var(--primary-color); color: var(--primary-color); transform: translateY(-1px); }
+        .btn-primary { background: var(--primary-color); color: white; border-color: var(--primary-color); }
+        .btn-primary:hover { background: var(--primary-hover); color: white; border-color: var(--primary-hover); }
+        .btn-danger { color: #ef4444; border-color: #ef4444; }
+        .btn-danger:hover { background: #fee2e2; color: #b91c1c; }
+        
+        /* Botão Tutorial Circular */
+        .btn-icon { padding: 8px; border-radius: 50%; width: 38px; height: 38px; text-decoration: none; font-size: 1.1rem; }
+
+        /* Categorias */
+        .categories-container {
+            background-color: var(--card-bg); padding: 16px 20px; border-radius: var(--border-radius);
+            margin-bottom: 24px; border: 1px solid var(--border-color); display: flex; gap: 10px; 
+            overflow-x: auto; box-shadow: var(--shadow);
+        }
+        .category-btn {
+            background-color: transparent; border: 1px solid transparent;
+            padding: 8px 18px; border-radius: 20px; cursor: pointer; color: var(--text-muted);
+            white-space: nowrap; transition: all 0.2s; font-weight: 500;
+        }
+        .category-btn:hover { color: var(--text-main); background-color: var(--block-bg); }
+        .category-btn.active { background-color: var(--primary-color); color: white; box-shadow: 0 2px 4px rgba(59, 130, 246, 0.3); }
+
+        /* Área de Conteúdo */
+        .content-area {
+            background-color: var(--card-bg); padding: 24px; border-radius: var(--border-radius);
+            border: 1px solid var(--border-color); min-height: 400px; box-shadow: var(--shadow);
+        }
+
+        .category-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 24px; padding-bottom: 12px; border-bottom: 1px solid var(--border-color); }
+        .category-header h2 { color: var(--text-main); font-weight: 600; font-size: 1.25rem; }
+
+        /* Grupos */
+        .item-group {
+            background-color: var(--card-bg); border: 1px solid var(--border-color);
+            padding: 20px; border-radius: var(--border-radius); margin-bottom: 20px;
+            border-left: 4px solid var(--primary-color); transition: 0.2s;
+        }
+        .item-group:hover { box-shadow: var(--shadow); }
+
+        /* Blocos Modo Edição */
+        .block-card { margin-bottom: 16px; }
+        .edit-mode .block-card {
+            background-color: var(--block-bg); padding: 16px; border-radius: 8px;
+            border: 1px dashed var(--border-color); position: relative;
+        }
+
+        .block-type-badge {
+            font-size: 0.75rem; text-transform: uppercase; font-weight: 700; letter-spacing: 0.5px;
+            color: var(--primary-color); margin-bottom: 8px; display: block;
+        }
+
+        input, textarea {
+            width: 100%; background: var(--card-bg); color: var(--text-main);
+            border: 1px solid var(--border-color); padding: 12px; border-radius: 8px; 
+            font-size: 0.95rem; transition: border-color 0.2s; outline: none;
+        }
+        input:focus, textarea:focus { border-color: var(--primary-color); box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.1); }
+        textarea { resize: vertical; min-height: 80px; line-height: 1.5; }
+
+        .block-controls { display: flex; gap: 8px; margin-top: 12px; justify-content: flex-end; }
+        .block-controls button { padding: 6px 12px; font-size: 0.8rem; border-radius: 6px; }
+
+        /* Add Menu */
+        .add-blocks-menu {
+            display: flex; gap: 10px; flex-wrap: wrap; margin-top: 20px; padding-top: 20px;
+            border-top: 1px dashed var(--border-color);
+        }
+
+        /* Renderização Final */
+        .view-titulo { font-size: 1.4rem; font-weight: 700; margin-bottom: 12px; color: var(--text-main); }
+        .view-data { display: inline-flex; align-items: center; gap: 6px; background: var(--block-bg); padding: 6px 12px; border-radius: 6px; font-size: 0.85rem; font-weight: 600; margin-bottom: 12px; color: var(--text-muted); border: 1px solid var(--border-color); }
+        .view-sobre { line-height: 1.6; margin-bottom: 16px; color: var(--text-main); white-space: pre-wrap; font-size: 0.95rem; }
+        .view-topicos { margin-left: 0; margin-bottom: 16px; list-style-position: inside; }
+        .view-topicos li { margin-bottom: 8px; color: var(--text-main); line-height: 1.5; font-size: 0.95rem; }
+        .view-imagem { max-width: 100%; border-radius: 8px; margin-bottom: 12px; box-shadow: var(--shadow); }
+
+        .notification-banner {
+            background: var(--status-urgent-bg); color: var(--status-urgent-text);
+            padding: 16px; border-radius: var(--border-radius); margin-bottom: 24px; display: none;
+            font-weight: 600; text-align: center; border: 1px solid var(--status-urgent-text);
+        }
+
+        @media (max-width: 600px) {
+            .header-actions { width: 100%; justify-content: flex-start; }
+            .category-header { flex-direction: column; align-items: flex-start; gap: 15px; }
+        }
+    </style>
+</head>
+<body>
+
+    <div id="notification" class="notification-banner">
+        🚨 Atenção! Você tem itens com prazo para amanhã!
+    </div>
+
+    <header>
+        <div class="header-titles">
+            <h1>🧩 Meu Painel</h1>
+            <p>Espaço modular e organizador</p>
+        </div>
+        <div class="header-actions">
+            <a href="tutorial.html" target="_blank" class="btn btn-icon" title="Abrir Tutorial">❓</a>
+            
+            <button id="theme-toggle" class="btn">☀️ Light</button>
+            <button id="edit-toggle" class="btn btn-primary">✏️ Editar Modelo</button>
+        </div>
+    </header>
+
+    <div class="categories-container" id="categories-menu"></div>
+    
+    <div id="add-category-container" style="display: none; margin-bottom: 20px;">
+        <input type="text" id="new-category-name" placeholder="Nome da nova categoria" style="width: auto; display: inline-block; max-width: 250px;">
+        <button class="btn btn-primary" onclick="addCategory()">+ Criar Categoria</button>
+    </div>
+
+    <div class="content-area">
+        <div class="category-header">
+            <h2 id="current-category">Selecione uma categoria</h2>
+            <button id="delete-cat-btn" class="btn btn-danger" style="display: none;" onclick="deleteCategory()">🗑️ Apagar Categoria</button>
+        </div>
+        
+        <div id="items-list"></div>
+        
+        <button id="add-item-btn" class="btn btn-primary" style="display: none; margin-top: 20px; width: 100%; padding: 12px;" onclick="addItem()">+ Adicionar Novo Grupo</button>
+    </div>
+
+    <script>
+        // --- TEMA ---
+        const themeToggle = document.getElementById('theme-toggle');
+        const htmlElement = document.documentElement;
+        themeToggle.addEventListener('click', () => {
+            const target = htmlElement.getAttribute('data-theme') === 'dark' ? 'light' : 'dark';
+            htmlElement.setAttribute('data-theme', target);
+            themeToggle.textContent = target === 'dark' ? '☀️ Light' : '🌙 Dark';
+        });
+
+        // --- DADOS ---
+        const defaultData = { 
+            "Geral": [
+                [ 
+                    { type: "titulo", value: "Bem-vindo ao seu espaço!" },
+                    { type: "sobre", value: "Clique em 'Editar Modelo' para alterar ou adicionar blocos aqui." }
+                ]
+            ] 
+        };
+        
+        let database = JSON.parse(localStorage.getItem('painel_modular_v2')) || defaultData;
+        let currentCategory = Object.keys(database)[0] || "";
+        let isEditMode = false;
+
+        function saveData() {
+            localStorage.setItem('painel_modular_v2', JSON.stringify(database));
+            checkNotifications();
+        }
+
+        // --- CONTROLES DE MODO DE EDIÇÃO ---
+        document.getElementById('edit-toggle').addEventListener('click', (e) => {
+            isEditMode = !isEditMode;
+            e.target.textContent = isEditMode ? '💾 Salvar Tudo' : '✏️ Editar Modelo';
+            e.target.classList.toggle('btn-primary');
+            document.body.classList.toggle('edit-mode');
+            
+            document.getElementById('add-category-container').style.display = isEditMode ? 'block' : 'none';
+            document.getElementById('add-item-btn').style.display = isEditMode ? 'block' : 'none';
+            document.getElementById('delete-cat-btn').style.display = (isEditMode && currentCategory) ? 'block' : 'none';
+            
+            render();
+        });
+
+        // --- LÓGICA DE CATEGORIAS ---
+        function addCategory() {
+            const name = document.getElementById('new-category-name').value.trim();
+            if (name && !database[name]) {
+                database[name] = [];
+                currentCategory = name;
+                document.getElementById('new-category-name').value = '';
+                saveData();
+                render();
+                document.getElementById('delete-cat-btn').style.display = isEditMode ? 'block' : 'none';
+            }
+        }
+
+        function deleteCategory() {
+            if(confirm(`Tem certeza que deseja apagar a categoria "${currentCategory}" e tudo dentro dela?`)) {
+                delete database[currentCategory];
+                currentCategory = Object.keys(database)[0] || "";
+                saveData();
+                render();
+                if(!currentCategory) document.getElementById('delete-cat-btn').style.display = 'none';
+            }
+        }
+
+        // --- LÓGICA DE GRUPOS (ITENS) E BLOCOS ---
+        function addItem() {
+            if(!currentCategory) return;
+            database[currentCategory].push([ { type: "titulo", value: "Novo Grupo" } ]);
+            saveData();
+            render();
+        }
+
+        function deleteItem(itemIndex) {
+            if(confirm("Apagar este grupo inteiro?")) {
+                database[currentCategory].splice(itemIndex, 1);
+                saveData();
+                render();
+            }
+        }
+
+        function addBlock(itemIndex, type) {
+            database[currentCategory][itemIndex].push({ type: type, value: "" });
+            saveData();
+            render();
+        }
+
+        function moveBlock(itemIndex, blockIndex, direction) {
+            const blocks = database[currentCategory][itemIndex];
+            if (direction === -1 && blockIndex > 0) {
+                [blocks[blockIndex], blocks[blockIndex - 1]] = [blocks[blockIndex - 1], blocks[blockIndex]];
+            } else if (direction === 1 && blockIndex < blocks.length - 1) {
+                [blocks[blockIndex], blocks[blockIndex + 1]] = [blocks[blockIndex + 1], blocks[blockIndex]];
+            }
+            saveData();
+            render();
+        }
+
+        function deleteBlock(itemIndex, blockIndex) {
+            database[currentCategory][itemIndex].splice(blockIndex, 1);
+            saveData();
+            render();
+        }
+
+        function updateBlockValue(itemIndex, blockIndex, value) {
+            database[currentCategory][itemIndex][blockIndex].value = value;
+            saveData();
+        }
+
+        // --- FORMATAÇÕES ESPECIAIS (DATA E LISTA) ---
+        
+        // Regra da Data: Bloqueia letras, limita a 5 chars e põe '/' após os 2 primeiros números
+        function handleDateInput(inputEle, itemIndex, blockIndex) {
+            let val = inputEle.value.replace(/\D/g, ''); // Remove tudo que não é número
+            if (val.length >= 2) {
+                val = val.substring(0, 2) + '/' + val.substring(2, 4);
+            }
+            inputEle.value = val;
+            updateBlockValue(itemIndex, blockIndex, val);
+        }
+
+        // Regra da Lista: Adiciona "- " automaticamente ao apertar Enter
+        function handleListTextarea(event, ele, itemIndex, blockIndex) {
+            if (event.key === 'Enter') {
+                event.preventDefault(); // Impede o Enter normal
+                const start = ele.selectionStart;
+                const end = ele.selectionEnd;
+                const value = ele.value;
+                
+                // Quebra linha e injeta " - "
+                const newText = value.substring(0, start) + "\n- " + value.substring(end);
+                ele.value = newText;
+                
+                // Move o cursor pro final do " - " recém criado
+                ele.selectionStart = ele.selectionEnd = start + 3; 
+                updateBlockValue(itemIndex, blockIndex, newText);
+            }
+        }
+
+        // --- RENDERIZAÇÃO ---
+        function renderCategories() {
+            const menu = document.getElementById('categories-menu');
+            menu.innerHTML = '';
+            Object.keys(database).forEach(cat => {
+                const btn = document.createElement('button');
+                btn.className = `category-btn ${cat === currentCategory ? 'active' : ''}`;
+                btn.textContent = cat;
+                btn.onclick = () => { 
+                    currentCategory = cat; 
+                    document.getElementById('delete-cat-btn').style.display = isEditMode ? 'block' : 'none';
+                    render(); 
+                };
+                menu.appendChild(btn);
+            });
+        }
+
+        function renderBlocksViewMode(block) {
+            if (!block.value.trim()) return '';
+            switch(block.type) {
+                case 'titulo': return `<div class="view-titulo">${block.value}</div>`;
+                case 'data': return `<div class="view-data">📅 Prazo: ${block.value}</div>`;
+                case 'sobre': return `<div class="view-sobre">${block.value}</div>`;
+                case 'topicos': 
+                    // Limpa o traço "-" caso o usuário tenha deixado para não sujar o HTML do <li>
+                    const lis = block.value.split('\n')
+                                     .filter(t => t.trim() !== '' && t.trim() !== '-')
+                                     .map(t => `<li>${t.replace(/^- /, '')}</li>`).join('');
+                    return `<ul class="view-topicos">${lis}</ul>`;
+                case 'imagem':
+                    const imgs = block.value.split('\n')
+                                      .filter(i => i.trim() !== '' && i.trim() !== '-')
+                                      .map(i => `<img src="${i.replace(/^- /, '')}" class="view-imagem" alt="Anexo">`).join('');
+                    return imgs;
+                default: return '';
+            }
+        }
+
+        function renderBlocksEditMode(block, itemIndex, blockIndex) {
+            let inputHtml = '';
+            const ph = {
+                'titulo': 'Digite o título...',
+                'sobre': 'Descreva os detalhes...',
+                'topicos': 'Digite e aperte Enter para formatar automaticamente...',
+                'imagem': 'Cole os links e aperte Enter...'
+            };
+
+            if (block.type === 'data') {
+                inputHtml = `<input type="text" placeholder="DD/MM" value="${block.value}" oninput="handleDateInput(this, ${itemIndex}, ${blockIndex})" maxlength="5">`;
+            } else if (block.type === 'topicos' || block.type === 'imagem') {
+                inputHtml = `<textarea placeholder="${ph[block.type]}" onkeydown="handleListTextarea(event, this, ${itemIndex}, ${blockIndex})" oninput="updateBlockValue(${itemIndex}, ${blockIndex}, this.value)">${block.value}</textarea>`;
+            } else if (block.type === 'sobre') {
+                inputHtml = `<textarea placeholder="${ph[block.type]}" oninput="updateBlockValue(${itemIndex}, ${blockIndex}, this.value)">${block.value}</textarea>`;
+            } else {
+                inputHtml = `<input type="text" placeholder="${ph[block.type]}" value="${block.value}" oninput="updateBlockValue(${itemIndex}, ${blockIndex}, this.value)">`;
+            }
+
+            const typeNames = { 'titulo': 'Título', 'data': 'Data Limite', 'sobre': 'Descrição', 'topicos': 'Tópicos (Lista)', 'imagem': 'Imagens' };
+
+            return `
+                <div class="block-card">
+                    <span class="block-type-badge">${typeNames[block.type]}</span>
+                    ${inputHtml}
+                    <div class="block-controls">
+                        <button class="btn" onclick="moveBlock(${itemIndex}, ${blockIndex}, -1)">⬆️</button>
+                        <button class="btn" onclick="moveBlock(${itemIndex}, ${blockIndex}, 1)">⬇️</button>
+                        <button class="btn btn-danger" onclick="deleteBlock(${itemIndex}, ${blockIndex})">🗑️ Excluir Bloco</button>
+                    </div>
+                </div>
+            `;
+        }
+
+        function renderItems() {
+            const list = document.getElementById('items-list');
+            list.innerHTML = '';
+            document.getElementById('current-category').textContent = currentCategory || "Crie uma categoria primeiro";
+            
+            if(!currentCategory || !database[currentCategory]) return;
+
+            database[currentCategory].forEach((itemBlocks, itemIndex) => {
+                const groupDiv = document.createElement('div');
+                groupDiv.className = 'item-group';
+                
+                let innerHTML = '';
+                
+                if (isEditMode) {
+                    itemBlocks.forEach((block, blockIndex) => {
+                        innerHTML += renderBlocksEditMode(block, itemIndex, blockIndex);
+                    });
+                    
+                    innerHTML += `
+                        <div class="add-blocks-menu">
+                            <button class="btn" onclick="addBlock(${itemIndex}, 'titulo')">+ Título</button>
+                            <button class="btn" onclick="addBlock(${itemIndex}, 'data')">+ Data</button>
+                            <button class="btn" onclick="addBlock(${itemIndex}, 'sobre')">+ Descrição</button>
+                            <button class="btn" onclick="addBlock(${itemIndex}, 'topicos')">+ Tópicos</button>
+                            <button class="btn" onclick="addBlock(${itemIndex}, 'imagem')">+ Imagem</button>
+                            <button class="btn btn-danger" style="margin-left: auto;" onclick="deleteItem(${itemIndex})">Excluir Grupo Inteiro</button>
+                        </div>
+                    `;
+                } else {
+                    if(itemBlocks.length === 0) innerHTML = `<p style="color: var(--text-muted); font-style: italic;">Grupo vazio.</p>`;
+                    itemBlocks.forEach(block => {
+                        innerHTML += renderBlocksViewMode(block);
+                    });
+                }
+                
+                groupDiv.innerHTML = innerHTML;
+                list.appendChild(groupDiv);
+            });
+        }
+
+        // --- SISTEMA DE NOTIFICAÇÃO ---
+        function checkNotifications() {
+            let temAviso = false;
+            const hoje = new Date();
+            
+            Object.values(database).forEach(categoria => {
+                categoria.forEach(item => {
+                    item.forEach(block => {
+                        if (block.type === 'data' && block.value.includes('/')) {
+                            const partes = block.value.split('/');
+                            if(partes.length >= 2 && partes[1].length === 2) {
+                                const dia = parseInt(partes[0]);
+                                const mes = parseInt(partes[1]);
+                                const dataLimite = new Date(hoje.getFullYear(), mes - 1, dia);
+                                const difDias = Math.ceil((dataLimite - hoje) / (1000 * 3600 * 24));
+                                
+                                if (difDias === 1 || difDias === 0) temAviso = true; // Avisa 1 dia antes ou no dia
+                            }
+                        }
+                    });
+                });
+            });
+
+            document.getElementById('notification').style.display = temAviso ? 'block' : 'none';
+        }
+
+        function render() {
+            renderCategories();
+            renderItems();
+        }
+
+        // --- INICIALIZAÇÃO ---
+        render();
+        checkNotifications();
+    </script>
+</body>
+</html>
+
